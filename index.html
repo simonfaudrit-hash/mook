@@ -1,0 +1,3445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MOOK</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Caveat:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+button{cursor:pointer;font-family:inherit;border:none;outline:none;background:none}
+input,select,textarea{font-family:inherit;outline:none}
+textarea{resize:vertical}
+
+/* ── APP SHELL ── */
+#app{
+  width:100%;height:100vh;height:100dvh;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);color:var(--t1);
+  font-family:var(--font);transition:background .3s,color .3s;
+}
+
+/* ── CONSOLE (Dictaphone) SKIN ── */
+:root{
+  --bg:#1C1C1E; --bg2:#2C2C2E; --bg3:#3A3A3C;
+  --border:#48484A; --border2:#636366;
+  --accent:#FF3B30; --green:#34C759; --blue:#0A84FF;
+  --t1:#FFFFFF; --t2:#EBEBF5; --t3:#8E8E93;
+  --radius:12px; --font:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;
+  --font-display:'Bebas Neue',sans-serif;
+  --shadow:0 1px 0 rgba(255,255,255,.05);
+}
+body.nb{
+  --bg:#F9F9F9; --bg2:#FFFFFF; --bg3:#F2F2F7;
+  --border:#E5E5EA; --border2:#C7C7CC;
+  --accent:#D97757; --green:#34C759; --blue:#007AFF;
+  --t1:#000000; --t2:#3C3C43; --t3:#8E8E93;
+}
+body{background:var(--bg);}
+
+/* ── HEADER ── */
+#hdr{
+  display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  padding:8px 10px 4px;
+  background:var(--bg2);
+  border-bottom:.5px solid var(--border);
+  flex-shrink:0;
+}
+#app-title{
+  font-family:'Bebas Neue',sans-serif !important;
+  font-size:42px !important;
+  letter-spacing:6px !important;
+  text-indent:6px;
+  color:#fff !important;
+  background:#000;
+  padding:7px 18px;
+  border-radius:10px;
+  line-height:1;
+  text-shadow:0 0 6px rgba(255,255,255,.6),0 0 14px rgba(255,255,255,.25);
+  justify-self:center;
+}
+#gear-btn{
+  position:absolute;right:16px;
+  color:var(--t3);padding:4px;display:flex;align-items:center;
+}
+
+/* ── PANELS ── */
+#panels{flex:1;overflow:hidden;position:relative;}
+.panel{
+  display:none;position:absolute;inset:0;
+  overflow-y:auto;padding:16px;
+  flex-direction:column;gap:12px;
+  width:100%;align-items:center;
+}
+/* Inner content max-width on desktop */
+.panel > *{width:100%;max-width:860px;}
+@media(min-width:900px){
+  .panel{padding:20px 0;}
+}
+.panel.active{display:flex;}
+
+/* ── BOTTOM NAV ── */
+#nav{
+  display:flex;flex-shrink:0;
+  background:var(--bg2);border-top:.5px solid var(--border);
+  justify-content:center;
+  position:relative;z-index:10;
+  /* Safe area for iPhone home indicator */
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+#nav-inner{
+  display:flex;width:100%;max-width:860px;
+}
+.nb-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;padding:8px 2px 6px;
+  color:var(--t3);font-size:11px;font-weight:500;
+  transition:color .15s;min-height:54px;
+}
+.nb-btn.active{color:var(--accent);}
+.nb-btn svg{width:26px;height:26px;}
+
+/* ── CARDS ── */
+.card{
+  background:var(--bg2);border-radius:var(--radius);
+  padding:16px 20px;flex-shrink:0;
+}
+body.nb .card{box-shadow:0 1px 3px rgba(0,0,0,.08);}
+
+.sec{
+  font-size:11px;font-weight:500;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.5px;
+  margin-bottom:8px;
+}
+
+/* ── BUTTONS ── */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  min-height:48px;padding:0 16px;border-radius:var(--radius);
+  font-size:15px;font-weight:600;color:var(--t1);
+  background:var(--bg3);transition:opacity .15s;
+}
+.btn:active{opacity:.7;}
+.btn.red{background:var(--accent);color:#fff;}
+.btn.green{background:var(--green);color:#fff;}
+.btn.blue{background:var(--blue);color:#fff;}
+.btn.danger{background:#FF3B30;color:#fff;}
+.btn.sm{min-height:36px;font-size:13px;font-weight:500;padding:0 12px;}
+.btn.icon-only{min-width:40px;padding:0;min-height:40px;}
+.btn svg{flex-shrink:0;}
+
+/* ── FIELDS ── */
+.lbl{display:block;font-size:12px;color:var(--t3);margin-bottom:4px;}
+.field{
+  width:100%;background:var(--bg3);border:none;
+  border-radius:10px;color:var(--t1);
+  font-size:15px;padding:11px 14px;
+}
+body.nb .field{background:#F2F2F7;color:#000;}
+textarea.field{min-height:80px;line-height:1.5;}
+select.field{min-height:46px;}
+.field:focus{outline:2px solid var(--accent);outline-offset:-2px;}
+
+.title-field{
+  width:100%;background:transparent;border:none;
+  border-bottom:1.5px solid var(--border);
+  color:var(--t1);font-size:20px;font-weight:600;
+  padding-bottom:5px;margin-bottom:12px;
+}
+.title-field:focus{border-bottom-color:var(--accent);}
+
+/* ── STATUS PILLS ── */
+.stat-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.stat{
+  min-height:36px;padding:0 14px;border-radius:20px;
+  font-size:13px;font-weight:500;background:var(--bg3);color:var(--t2);
+}
+.stat.draft.on{background:var(--accent);color:#fff;}
+.stat.prog.on{background:var(--blue);color:#fff;}
+.stat.done.on{background:var(--green);color:#fff;}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.row{display:flex;gap:8px;}
+.row>*{flex:1;}
+
+/* ── RECORDINGS LIST ── */
+.rec-item{
+  display:flex;align-items:center;gap:12px;
+  min-height:58px;padding:12px 16px;
+  background:var(--bg2);border-radius:var(--radius);
+  cursor:pointer;transition:opacity .15s;
+  border-left:3px solid transparent;
+}
+.rec-item:active{opacity:.7;}
+.rec-item.active{border-left-color:var(--accent);}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.dot.d{background:var(--accent);}
+.dot.a{background:var(--green);}
+.dot.v{background:var(--blue);}
+.ri-info{flex:1;min-width:0;}
+.ri-title{font-size:15px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ri-meta{font-size:12px;color:var(--t3);margin-top:2px;}
+.ri-badge{
+  font-size:11px;padding:2px 8px;border-radius:20px;
+  border:1px solid;flex-shrink:0;font-weight:500;
+}
+.bd{color:var(--accent);border-color:var(--accent);}
+.bp{color:var(--blue);border-color:var(--blue);}
+.bk{color:var(--green);border-color:var(--green);}
+
+/* ── PILLS / FILTER ── */
+.pill{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:13px;padding:6px 12px;border-radius:20px;
+  background:var(--bg3);color:var(--t2);cursor:pointer;
+}
+.pill.on{background:rgba(255,59,48,.15);color:var(--accent);}
+body.nb .pill.on{background:rgba(217,119,87,.15);color:var(--accent);}
+
+/* ── TOGGLE ── */
+.tog-wrap{display:flex;align-items:center;gap:8px;}
+.tog{position:relative;width:40px;height:24px;background:var(--border2);border-radius:12px;cursor:pointer;transition:background .2s;}
+.tog.on{background:var(--accent);}
+body.nb .tog.on{background:var(--green);}
+.tog-k{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.tog.on .tog-k{transform:translateX(16px);}
+.tog-lbl{font-size:14px;color:var(--t2);}
+
+/* ── LINKED VERSIONS ── */
+.linked-item{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:var(--bg3);border-radius:10px;cursor:pointer;
+}
+.linked-item:active{opacity:.7;}
+.li-title{font-size:13px;color:var(--t1);flex:1;}
+.li-remove{color:var(--t3);padding:2px 6px;font-size:16px;}
+
+/* ── WAVEFORM EDITOR ── */
+.wv-wrap{
+  background:var(--bg3);border-radius:10px;
+  overflow:hidden;position:relative;height:90px;cursor:crosshair;
+}
+.wv-ph{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);pointer-events:none;}
+.wv-sel{
+  position:absolute;top:0;bottom:0;
+  background:rgba(255,59,48,.15);
+  border-left:1.5px solid var(--accent);border-right:1.5px solid var(--accent);
+  pointer-events:none;display:none;
+}
+
+/* ── EQ ── */
+.eq-bands{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:12px;width:100%;}
+.eq-band{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.eq-band label{font-size:10px;color:var(--t3);}
+.eq-bv{font-size:11px;font-weight:700;color:var(--t1);min-width:28px;text-align:center;}
+.eq-band input[type=range]{writing-mode:vertical-lr;direction:rtl;width:22px;height:72px;cursor:pointer;accent-color:var(--accent);}
+.eq-presets{display:flex;gap:5px;flex-wrap:wrap;}
+.ep{font-size:12px;padding:5px 9px;border-radius:8px;background:var(--bg3);color:var(--t2);cursor:pointer;}
+.ep.on{background:rgba(255,59,48,.15);color:var(--accent);}
+body.nb .ep.on{background:rgba(217,119,87,.15);color:var(--accent);}
+
+/* ── REVERB TYPES ── */
+.rt-row{display:flex;gap:6px;margin-bottom:10px;}
+.rt{flex:1;min-height:44px;border-radius:10px;background:var(--bg3);color:var(--t2);font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;}
+.rt.on{background:rgba(255,59,48,.15);color:var(--accent);}
+body.nb .rt.on{background:rgba(217,119,87,.15);color:var(--accent);}
+
+/* ── METRONOME ── */
+.metro-center{display:flex;flex-direction:column;align-items:center;gap:12px;padding:4px 0;}
+.bpm-big{font-family:var(--font-display);font-size:64px;color:var(--accent);line-height:1;letter-spacing:-1px;}
+.bpm-sub{font-size:13px;color:var(--t3);text-align:center;}
+.beat-leds{display:flex;gap:10px;}
+.bled{width:16px;height:16px;border-radius:50%;background:var(--border);transition:all .06s;}
+.bled.acc{background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.bled.on{background:var(--t3);}
+.adj-row{display:flex;gap:6px;align-items:center;}
+.adj{
+  min-width:52px;min-height:48px;border-radius:10px;
+  background:var(--bg3);color:var(--t1);
+  font-size:13px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+}
+.play-circ{
+  width:66px;height:66px;border-radius:50%;
+  background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 18px rgba(255,59,48,.3);
+}
+.play-circ.playing{background:var(--green);box-shadow:0 0 18px rgba(52,199,89,.3);}
+.sig-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.sig{
+  min-height:42px;padding:0 14px;border-radius:10px;
+  background:var(--bg3);color:var(--t2);font-size:14px;font-weight:600;
+}
+.sig.on{background:rgba(255,59,48,.15);color:var(--accent);}
+
+/* ── TUNER ── */
+.gauge-wrap{position:relative;width:260px;height:140px;margin:0 auto;}
+#gneedle{
+  position:absolute;bottom:10px;left:50%;width:3px;height:108px;
+  background:var(--accent);transform-origin:bottom center;
+  transform:translateX(-50%) rotate(0deg);transition:transform .1s;border-radius:3px 3px 0 0;
+}
+#gneedle::after{content:'';position:absolute;top:-5px;left:-5px;width:13px;height:13px;border-radius:50%;background:var(--accent);}
+.gpivot{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:16px;height:16px;border-radius:50%;background:var(--t1);border:2px solid var(--bg);z-index:2;}
+.note-big{font-family:var(--font-display);font-size:64px;color:var(--t1);line-height:1;min-width:90px;text-align:center;}
+.cents{font-size:14px;color:var(--t2);}
+.cents.it{color:var(--green);font-weight:700;}
+.tstr{
+  min-height:48px;padding:0 12px;border-radius:10px;
+  background:var(--bg3);color:var(--t2);font-size:14px;font-weight:600;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+}
+.tstr span{font-size:10px;color:var(--t3);}
+.tstr.on{background:rgba(255,59,48,.15);color:var(--accent);}
+.mic-btn{
+  min-height:52px;width:180px;border-radius:var(--radius);
+  font-size:15px;font-weight:600;color:#fff;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--accent);
+}
+.mic-btn.active{background:var(--green);}
+
+/* ── TUNINGS ── */
+.tuning-card{
+  background:var(--bg2);border-radius:10px;
+  padding:10px 14px;cursor:pointer;transition:opacity .15s;
+  border-left:3px solid transparent;
+}
+.tuning-card:active{opacity:.7;}
+.tuning-card.on{border-left-color:var(--accent);}
+.tc-name{font-size:14px;font-weight:600;color:var(--t1);margin-bottom:2px;}
+.tc-notes{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:1px;}
+.tc-desc{font-size:11px;color:var(--t3);margin-top:3px;line-height:1.4;}
+.cat-hd{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;padding-bottom:5px;border-bottom:.5px solid var(--border);}
+.tv-visual{display:flex;border:.5px solid var(--border);border-radius:8px;overflow:hidden;margin:8px 0;}
+.tv-s{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 2px;border-right:.5px solid var(--border);}
+.tv-s:last-child{border-right:none;}
+.tv-n{font-family:'Share Tech Mono',monospace;font-size:14px;font-weight:700;color:var(--accent);}
+.tv-l{font-size:9px;color:var(--t3);margin-top:2px;}
+
+/* ── CHORDS ── */
+.chord-lib-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.chord-card{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.chord-name{font-size:13px;font-weight:600;color:var(--t1);}
+
+/* ── SETTINGS ── */
+.skin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.skin-opt{
+  border:2px solid var(--border);border-radius:var(--radius);
+  padding:14px;cursor:pointer;text-align:center;transition:border-color .15s;
+}
+.skin-opt.on{border-color:var(--accent);}
+.skin-prev{height:46px;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;}
+.skin-title{font-size:15px;font-weight:600;color:var(--t1);}
+
+/* ── MISC ── */
+.autosaved{font-size:12px;color:var(--green);display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .3s;}
+#toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-family:-apple-system,'Helvetica Neue',sans-serif;font-weight:400;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw;text-align:center;white-space:normal;}
+#toast.show{opacity:1;}
+.sub-tabs{display:flex;background:var(--bg3);border-radius:10px;padding:2px;gap:2px;flex-shrink:0;justify-content:center;}
+.sub-tab{flex:1;min-height:38px;border-radius:8px;font-size:13px;font-weight:600;color:var(--t3);padding:0 8px;text-align:center;}
+.sub-tab.on{background:var(--bg2);color:var(--t1);}
+
+/* ── Typography system ──
+   Bebas Neue  → titles, buttons, labels, commands (uppercase only)
+   system-ui   → body text, descriptions, readable content
+   Share Tech Mono → technical values (notes, Hz, BPM numbers)
+── */
+/* Base: system font for all body text */
+#app { font-family: -apple-system,'Helvetica Neue',sans-serif; }
+
+/* Bebas Neue: UI commands & titles */
+.bpm-big, .note-big, .ri-title, .tc-name,
+.chord-name, .sig, #sig-display, .nb-btn, .sec,
+.sub-tab, .stat, .adj, .bpm-sub, .skin-title,
+.cat-hd, h1, h2, h3,
+button.btn, .play-circ, .mic-btn,
+#beats-col button, #div-col button {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: .5px;
+}
+/* Body text: system font */
+.tc-desc, .ri-meta, .tog-lbl, .bpm-sub,
+.tuner-status, #tuner-target-note,
+.tc-notes-desc, p, .lbl, label,
+select.field, input.field, textarea.field {
+  font-family: -apple-system,'Helvetica Neue',sans-serif;
+  font-size: 13px;
+}
+/* Technical mono */
+.tc-notes, .tv-n, .eq-bv, .eq-band label,
+.cents, #cents-disp, .ri-badge,
+input[type=number] {
+  font-family: 'Share Tech Mono', monospace;
+}
+/* Sig btn */
+#sig-btn, #sig-display { font-family: 'Bebas Neue', sans-serif !important; }
+
+
+/* ── Glow touches ── */
+.bled.acc {
+  box-shadow: 0 0 10px 2px #FF3B30, 0 0 20px 4px rgba(255,59,48,.3);
+}
+.bled.on {
+  box-shadow: 0 0 8px 1px rgba(255,59,48,.5);
+}
+.play-circ {
+  box-shadow: 0 0 20px 4px rgba(255,59,48,.3);
+}
+.play-circ.playing {
+  box-shadow: 0 0 20px 6px rgba(52,199,89,.4);
+}
+.mic-btn.active {
+  box-shadow: 0 0 20px 4px rgba(52,199,89,.35);
+}
+/* Glow on active nav */
+.nb-btn.active svg {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+/* Active card border glow */
+.rec-item.active {
+  box-shadow: 0 0 0 1.5px var(--accent), 0 0 12px rgba(255,59,48,.2);
+}
+/* Accent button glow */
+.btn.red:active, .btn.red:focus {
+  box-shadow: 0 0 14px rgba(255,59,48,.4);
+}
+.btn.green:active, .btn.green:focus {
+  box-shadow: 0 0 14px rgba(52,199,89,.4);
+}
+/* EQ curve container subtle glow when EQ on */
+#eq-curve {
+  transition: box-shadow .3s;
+}
+/* Tuner in-tune glow */
+.cents.it {
+  text-shadow: 0 0 10px #34C759;
+}
+/* Sig button hover */
+#sig-btn:hover {
+  box-shadow: 0 0 14px rgba(255,59,48,.25);
+}
+/* String wave active glow in tuner/chords */
+.tstr.on {
+  box-shadow: 0 0 12px rgba(255,59,48,.3);
+}
+
+
+.btn-circle:active { transform: scale(.93); }
+
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+* { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+
+
+@keyframes recPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255,59,48,.7); }
+  70%  { box-shadow: 0 0 0 14px rgba(255,59,48,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,59,48,0); }
+}
+.rec-pulse { animation: recPulse 1.2s ease-out infinite; }
+
+
+.rec-item-wrap{position:relative;overflow:hidden;border-radius:var(--radius);}
+.rec-item-actions{position:absolute;inset:0;display:flex;pointer-events:none;}
+.swipe-star{position:absolute;left:0;top:0;bottom:0;width:80px;background:var(--green);
+  display:flex;align-items:center;justify-content:center;
+  transform:translateX(-100%);transition:transform .15s cubic-bezier(.25,.46,.45,.94);
+  border-radius:var(--radius) 0 0 var(--radius);}
+.swipe-del{position:absolute;right:0;top:0;bottom:0;width:80px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  transform:translateX(100%);transition:transform .15s cubic-bezier(.25,.46,.45,.94);
+  border-radius:0 var(--radius) var(--radius) 0;}
+.rec-item{transition:transform .15s cubic-bezier(.25,.46,.45,.94);position:relative;z-index:1;will-change:transform;}
+/* Star handled via ri-title suffix */'
+.star-icon{color:gold;font-size:14px;margin-right:4px;}
+
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="hdr">
+    <div></div>
+    <div id="app-title" onclick="showPanel('notebook')" style="cursor:pointer">MOOK</div>
+    <button id="gear-btn" onclick="toggleSettings()" aria-label="Settings">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <path d="M9.1 2.5H12.9L13.5 5.1C14.3 5.4 15 5.8 15.6 6.3L18.1 5.4L20 8.6L18 10.3C18.1 10.5 18.1 10.8 18.1 11C18.1 11.2 18.1 11.5 18 11.7L20 13.4L18.1 16.6L15.6 15.7C15 16.2 14.3 16.6 13.5 16.9L12.9 19.5H9.1L8.5 16.9C7.7 16.6 7 16.2 6.4 15.7L3.9 16.6L2 13.4L4 11.7C3.9 11.5 3.9 11.2 3.9 11C3.9 10.8 3.9 10.5 4 10.3L2 8.6L3.9 5.4L6.4 6.3C7 5.8 7.7 5.4 8.5 5.1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        <circle cx="11" cy="11" r="2.8" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- PANELS -->
+  <div id="panels">
+
+    <!-- ══ NOTEBOOK ══ -->
+    <div class="panel active" id="p-notebook">
+      <div style="height:28px"></div>
+      <div style="display:flex;gap:20px;justify-content:center;align-items:center">
+
+        <!-- DICTAPHONE -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+          <button onclick="addNew('dictaphone')" style="
+            width:72px;height:72px;border-radius:50%;
+            background:var(--accent);border:none;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 0 18px rgba(255,59,48,.4),0 4px 16px rgba(0,0,0,.3);
+            transition:transform .12s,box-shadow .12s;">
+            <svg width="30" height="26" viewBox="0 0 34 28" fill="none">
+              <rect x="1"   y="12" width="3" height="6"  rx="1.5" fill="white" opacity=".5"/>
+              <rect x="6"   y="8"  width="3" height="14" rx="1.5" fill="white" opacity=".7"/>
+              <rect x="11"  y="3"  width="3" height="24" rx="1.5" fill="white"/>
+              <rect x="16"  y="6"  width="3" height="18" rx="1.5" fill="white" opacity=".85"/>
+              <rect x="21"  y="9"  width="3" height="12" rx="1.5" fill="white" opacity=".65"/>
+              <rect x="26"  y="11" width="3" height="8"  rx="1.5" fill="white" opacity=".45"/>
+              <rect x="31"  y="13" width="2" height="4"  rx="1"   fill="white" opacity=".3"/>
+            </svg>
+          </button>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;color:var(--t2)">Dictaphone</span>
+
+        </div>
+
+        <!-- RECORD -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+          <button onclick="addNew('app')" style="
+            width:86px;height:86px;border-radius:50%;
+            background:var(--green);border:none;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 0 22px rgba(52,199,89,.45),0 4px 18px rgba(0,0,0,.3);
+            transition:transform .12s,box-shadow .12s;">
+            <svg width="32" height="34" viewBox="0 0 28 30" fill="none">
+              <rect x="8" y="1" width="12" height="16" rx="6" stroke="white" stroke-width="1.8" fill="none"/>
+              <path d="M4 14a10 10 0 0 0 20 0" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+              <line x1="14" y1="24" x2="14" y2="29" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="8"  y1="29" x2="20" y2="29" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;color:var(--t2)">Record</span>
+
+        </div>
+
+        <!-- VIDEO -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+          <button onclick="addNew('video')" style="
+            width:72px;height:72px;border-radius:50%;
+            background:var(--blue);border:none;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 0 18px rgba(10,132,255,.4),0 4px 16px rgba(0,0,0,.3);
+            transition:transform .12s,box-shadow .12s;">
+            <svg width="32" height="24" viewBox="0 0 32 24" fill="none">
+              <rect x="1" y="3" width="20" height="18" rx="3" stroke="white" stroke-width="1.8" fill="none"/>
+              <path d="M21 9l9-4v14l-9-4V9Z" stroke="white" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+              <circle cx="11" cy="12" r="3.5" stroke="white" stroke-width="1.4" fill="none" opacity=".7"/>
+            </svg>
+          </button>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;color:var(--t2)">Video</span>
+
+        </div>
+
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <button class="pill on" data-f="all" onclick="setFilter(this)">All</button>
+        <button class="pill" data-f="draft" onclick="setFilter(this)">Draft</button>
+        <button class="pill" data-f="inprogress" onclick="setFilter(this)">In Progress</button>
+        <button class="pill" data-f="done" onclick="setFilter(this)">Done</button>
+        <input class="field" id="search" placeholder="Search…" oninput="renderList()" style="flex:1;min-width:80px;min-height:40px;padding:8px 12px;font-size:14px"/>
+      </div>
+      <div id="rec-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
+    <!-- ══ DETAIL ══ -->
+    <div class="panel" id="p-detail">
+      <div id="detail-content"></div>
+    </div>
+
+    <!-- ══ STUDIO ══ -->
+    <div class="panel" id="p-studio">
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <button class="btn sm" onclick="goBackFromStudio()" style="gap:6px;min-height:38px;padding:0 14px">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><polyline points="10,3 4,8 10,13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to Record
+        </button>
+        <span id="studio-rec-label" style="font-size:13px;color:var(--t3)"></span>
+      </div>
+      <!-- Editor -->
+      <div class="card">
+        <div class="sec">Editor</div>
+        <div class="wv-wrap" id="wv-area"
+          onmousedown="startSel(event)" onmousemove="moveSel(event)" onmouseup="endSel(event)"
+          ontouchstart="startSelT(event)" ontouchmove="moveSelT(event)" ontouchend="endSelT(event)">
+          <canvas id="wv-cv" style="width:100%;height:90px;display:block"></canvas>
+          <div class="wv-ph" id="wv-ph" style="left:0"></div>
+          <div class="wv-sel" id="wv-sel"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center">
+          <button class="btn icon-only" onclick="playAudio()" title="Play">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><polygon points="4,2 18,10 4,18" fill="currentColor"/></svg>
+          </button>
+          <button class="btn icon-only" onclick="stopAudio()" title="Stop">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2" fill="currentColor"/></svg>
+          </button>
+          <button class="btn sm danger" id="cut-btn" onclick="cutSel()" disabled style="gap:5px">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="4" cy="4" r="2" stroke="currentColor" stroke-width="1.4"/><circle cx="4" cy="12" r="2" stroke="currentColor" stroke-width="1.4"/><line x1="6" y1="5.5" x2="14" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="6" y1="10.5" x2="14" y2="4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            Cut
+          </button>
+          <div style="position:relative;display:inline-block" id="export-wrap">
+            <button class="btn sm" onclick="toggleExportMenu()" style="gap:5px">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              .wav ▾
+            </button>
+            <div id="export-menu" style="display:none;position:absolute;bottom:110%;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:180px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.4)">
+              <button onclick="exportWAV('raw')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:transparent;border:none;color:var(--t1);font-size:13px;border-radius:7px;cursor:pointer">Raw</button>
+              <button onclick="exportWAV('comp')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:transparent;border:none;color:var(--t1);font-size:13px;border-radius:7px;cursor:pointer">+ Compressor</button>
+              <button onclick="exportWAV('eq')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:transparent;border:none;color:var(--t1);font-size:13px;border-radius:7px;cursor:pointer">+ EQ</button>
+              <button onclick="exportWAV('reverb')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:transparent;border:none;color:var(--t1);font-size:13px;border-radius:7px;cursor:pointer">+ Reverb</button>
+              <button onclick="exportWAV('all')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:rgba(255,59,48,.15);border:none;color:var(--accent);font-size:13px;border-radius:7px;cursor:pointer;font-weight:600">Master (Comp + EQ + Reverb)</button>
+            </div>
+          </div>
+          <span id="wv-dur" style="font-size:12px;color:var(--t3);margin-left:auto;white-space:nowrap;font-family:'Share Tech Mono',monospace">—</span>
+          <span id="sel-lbl" style="font-size:12px;color:var(--accent)"></span>
+        </div>
+        <div id="cuts-sec" style="display:none;margin-top:8px;flex-direction:column;gap:4px"></div>
+        <div id="ed-hint" style="margin-top:8px;font-size:13px;color:var(--t3);line-height:1.5;text-align:center;padding:20px 0">To edit a take, open a recording →<br>tap <strong>Studio</strong> next to any take.</div>
+      </div>
+
+      <!-- Compressor -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div class="tog-wrap">
+            <div class="tog" id="comp-tog" onclick="toggleComp()"><div class="tog-k"></div></div>
+            <span class="tog-lbl" id="comp-lbl">Compressor Off</span>
+          </div>
+          <div style="flex:1"></div>
+          <button class="btn sm" onclick="toggleCompBands()" id="comp-bands-btn" style="font-size:11px;letter-spacing:.5px;color:var(--t3);background:var(--bg3);border:none;border-radius:6px;padding:4px 10px;cursor:pointer">Show Controls</button>
+          <button class="btn sm red" onclick="previewComp()" style="gap:5px">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 8s3-5.5 7-5.5S15 8 15 8s-3 5.5-7 5.5S1 8 1 8z" stroke="currentColor" stroke-width="1.4" fill="none"/><circle cx="8" cy="8" r="2.2" fill="currentColor"/></svg>
+            Preview
+          </button>
+        </div>
+        <!-- Compressor controls — collapsible -->
+        <div id="comp-bands-wrap" style="display:none;flex-direction:column;gap:10px">
+          <!-- Presets -->
+          <div style="display:flex;gap:5px;flex-wrap:wrap" id="comp-presets"></div>
+          <!-- Sliders -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="comp-sliders">
+            <div><label class="lbl">Threshold <span id="comp-thresh-val">-24 dB</span></label>
+              <input type="range" min="-60" max="0" value="-24" id="comp-thresh" style="width:100%;accent-color:var(--accent)" oninput="updComp()"/></div>
+            <div><label class="lbl">Ratio <span id="comp-ratio-val">4:1</span></label>
+              <input type="range" min="1" max="20" value="4" step="0.1" id="comp-ratio" style="width:100%;accent-color:var(--accent)" oninput="updComp()"/></div>
+            <div><label class="lbl">Attack <span id="comp-attack-val">3 ms</span></label>
+              <input type="range" min="0" max="250" value="3" id="comp-attack" style="width:100%;accent-color:var(--accent)" oninput="updComp()"/></div>
+            <div><label class="lbl">Release <span id="comp-release-val">250 ms</span></label>
+              <input type="range" min="10" max="1000" value="250" id="comp-release" style="width:100%;accent-color:var(--accent)" oninput="updComp()"/></div>
+            <div><label class="lbl">Knee <span id="comp-knee-val">6 dB</span></label>
+              <input type="range" min="0" max="40" value="6" id="comp-knee" style="width:100%;accent-color:var(--accent)" oninput="updComp()"/></div>
+            <div><label class="lbl">Makeup Gain <span id="comp-gain-val">0 dB</span></label>
+              <input type="range" min="-12" max="24" value="0" id="comp-makeup" style="width:100%;accent-color:var(--accent)" oninput="updComp()"/></div>
+          </div>
+          <!-- GR meter -->
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t3)">
+            <span>GR:</span>
+            <div style="flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+              <div id="comp-gr-bar" style="height:100%;width:0%;background:var(--accent);transition:width .05s;border-radius:3px"></div>
+            </div>
+            <span id="comp-gr-val">0 dB</span>
+          </div>
+        </div>
+      </div>
+      <!-- EQ -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div class="tog-wrap">
+            <div class="tog on" id="eq-tog" onclick="toggleEQ()"><div class="tog-k"></div></div>
+            <span class="tog-lbl" id="eq-lbl">EQ On</span>
+          </div>
+          <div style="flex:1"></div>
+          <button class="btn sm" onclick="resetEQ()" style="gap:5px">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 8a5.5 5.5 0 1 0 1.1-3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><polyline points="1,3 2.5,4.7 4,3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Reset
+          </button>
+          <button class="btn sm red" onclick="previewEQ()" style="gap:5px">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 8s3-5.5 7-5.5S15 8 15 8s-3 5.5-7 5.5S1 8 1 8z" stroke="currentColor" stroke-width="1.4" fill="none"/><circle cx="8" cy="8" r="2.2" fill="currentColor"/></svg>
+            Preview
+          </button>
+        </div>
+        <canvas id="eq-curve" height="100" style="width:100%;background:var(--bg3);border-radius:8px;display:block;margin-bottom:10px"></canvas>
+        <!-- Collapsible bands -->
+        <div id="eq-bands-wrap" style="display:none;margin-bottom:10px">
+          <div class="eq-bands" id="eq-bands"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="sec" style="margin:0">Presets</div>
+          <button onclick="toggleEQBands()" id="eq-bands-btn" style="font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;color:var(--t3);background:var(--bg3);border:none;border-radius:6px;padding:4px 10px;cursor:pointer">Show Bands</button>
+        </div>
+        <div class="eq-presets" id="eq-presets"></div>
+      </div>
+      <!-- Reverb -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div class="tog-wrap">
+            <div class="tog" id="rev-tog" onclick="toggleRev()"><div class="tog-k"></div></div>
+            <span class="tog-lbl" id="rev-lbl">Reverb Off</span>
+          </div>
+          <div style="flex:1"></div>
+          <button class="btn sm red" onclick="previewRev()" style="gap:5px"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 8s3-5.5 7-5.5S15 8 15 8s-3 5.5-7 5.5S1 8 1 8z" stroke="currentColor" stroke-width="1.4" fill="none"/><circle cx="8" cy="8" r="2.2" fill="currentColor"/></svg> Preview</button>
+        </div>
+        <div class="rt-row">
+          <button class="rt on" data-rt="Room" onclick="setRevType(this)">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="3" fill="currentColor"/><path d="M10 5.5a4.5 4.5 0 0 1 3.18 7.68" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M6.82 6.82A4.5 4.5 0 0 0 10 14.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            Room
+          </button>
+          <button class="rt" data-rt="Hall" onclick="setRevType(this)">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.5" fill="currentColor"/><path d="M10 5a5 5 0 0 1 3.54 8.54" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M6.46 6.46A5 5 0 0 0 10 15" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M10 2a8 8 0 0 1 5.66 13.66" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4.34 4.34A8 8 0 0 0 10 18" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            Hall
+          </button>
+          <button class="rt" data-rt="Plate" onclick="setRevType(this)">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2" fill="currentColor"/><path d="M10 5.5a4.5 4.5 0 0 1 3.18 7.68" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M6.82 6.82A4.5 4.5 0 0 0 10 14.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M10 2.5a7.5 7.5 0 0 1 5.3 12.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M4.7 4.7A7.5 7.5 0 0 0 10 17.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M10 0.5a9.5 9.5 0 0 1 6.72 16.22" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity=".5"/><path d="M3.28 3.28A9.5 9.5 0 0 0 10 19.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity=".5"/></svg>
+            Plate
+          </button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--t3)">Dry</span>
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--t1)" id="dw-lbl">30%</span>
+            <span style="font-size:12px;color:var(--t3)">Wet</span>
+          </div>
+          <input type="range" min="0" max="100" value="30" id="dw-knob" style="width:100%;accent-color:var(--accent)" oninput="updDW(+this.value)"/>
+        </div>
+      </div>
+
+    </div><!-- /p-studio -->
+
+    <!-- ══ TOOLS ══ -->
+    <div class="panel" id="p-tools" style="overflow-y:auto;-webkit-overflow-scrolling:touch;">
+      <div class="sub-tabs">
+        <button class="sub-tab on" id="st-click" onclick="showSub('click')">Click</button>
+        <button class="sub-tab" id="st-tuner" onclick="showSub('tuner')">Tuner</button>
+        <button class="sub-tab" id="st-tunings" onclick="showSub('tunings')">Tunings</button>
+        <button class="sub-tab" id="st-chords" onclick="showSub('chords')">Chords</button>
+      </div>
+
+      <!-- CLICK -->
+      <div id="sub-click" class="card">
+        <div class="metro-center">
+          <svg width="80" height="100" viewBox="0 0 80 100" id="pend-svg">
+            <line id="pend-line" x1="40" y1="88" x2="40" y2="18" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
+            <circle id="pend-bob" cx="40" cy="18" r="10" fill="var(--accent)"/>
+            <circle cx="40" cy="88" r="8" fill="var(--t3)"/>
+            <circle id="pend-tick" cx="40" cy="55" r="5" fill="var(--green)" opacity="0"/>
+          </svg>
+          <div class="beat-leds" id="beat-leds"></div>
+          <div style="text-align:center">
+            <div class="bpm-big" id="bpm-val">120</div>
+            <div class="bpm-sub" id="bpm-sub">BPM · Moderato · 4/4</div>
+          </div>
+          <input type="range" min="20" max="300" value="120" id="bpm-range" style="width:100%;accent-color:var(--accent)" oninput="setBPM(+this.value)"/>
+          <div class="adj-row" style="justify-content:center">
+            <button class="play-circ" id="play-circ" onclick="toggleMetro()">
+              <svg width="30" height="30" viewBox="0 0 30 30" fill="none" id="metro-icon"><polygon points="7,3 27,15 7,27" fill="white"/></svg>
+            </button>
+          </div>
+          <div style="display:flex;justify-content:center">
+            <button id="sig-btn" onclick="toggleSigPicker()" style="
+              min-height:56px;min-width:100px;border-radius:14px;
+              background:var(--bg3);border:none;cursor:pointer;
+              font-family:'Bebas Neue',sans-serif;font-size:32px;
+              letter-spacing:2px;color:var(--t1);display:flex;
+              align-items:center;justify-content:center;gap:2px;
+              padding:0 20px;">
+              <span id="sig-display">4/4</span>
+            </button>
+          </div>
+          <!-- Sig picker popup — free input -->
+          <div id="sig-picker" style="display:none;background:var(--bg2);border-radius:14px;padding:16px;margin-top:6px">
+            <div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;text-align:center">Time Signature</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+                <div style="font-size:11px;color:var(--t3)">Beats</div>
+                <input id="input-beats" type="number" min="1" max="32" value="4"
+                  oninput="setSigBeats(+this.value||4)"
+                  style="width:70px;height:70px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:36px;
+                  background:var(--bg3);border:2px solid var(--accent);border-radius:12px;color:var(--t1);outline:none"/>
+              </div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--t3);padding-top:16px">/</div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+                <div style="font-size:11px;color:var(--t3)">Division</div>
+                <input id="input-div" type="number" min="1" max="32" value="4"
+                  oninput="setSigDiv(+this.value||4)"
+                  style="width:70px;height:70px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:36px;
+                  background:var(--bg3);border:2px solid var(--border);border-radius:12px;color:var(--t1);outline:none"/>
+              </div>
+            </div>
+            <button onclick="toggleSigPicker()" style="width:100%;min-height:44px;border-radius:10px;background:#34C759;border:none;color:#fff;font-size:18px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;margin-top:14px;cursor:pointer">Done</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TUNER -->
+      <div id="sub-tuner" style="display:none;flex-direction:column;gap:10px;width:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;">
+
+        <!-- Target tuning selector -->
+        <div class="card">
+          <div class="sec">Target Tuning</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="tuner-tuning-sel" onchange="tunerApplyTuning(this.value)"
+              style="flex:1;min-height:44px;background:var(--bg3);border:none;border-radius:10px;color:var(--t1);font-size:14px;padding:0 12px"></select>
+          </div>
+          <!-- String wave selectors -->
+          <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-top:10px;align-items:stretch;width:100%;overflow:hidden" id="tuner-str-grid"></div>
+        </div>
+
+        <!-- Gauge + detection -->
+        <div class="card">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div class="gauge-wrap">
+              <svg width="260" height="140" viewBox="0 0 260 140" style="position:absolute;top:0;left:0">
+                <path d="M20 130 A110 110 0 0 1 240 130" fill="none" stroke="#48484A" stroke-width="8" stroke-linecap="round"/>
+                <path d="M20 130 A110 110 0 0 1 130 20" fill="none" stroke="#FF3B30" stroke-width="3" opacity=".35" stroke-linecap="round"/>
+                <path d="M130 20 A110 110 0 0 1 240 130" fill="none" stroke="#FF3B30" stroke-width="3" opacity=".35" stroke-linecap="round"/>
+                <path d="M102 29 A110 110 0 0 1 158 29" fill="none" stroke="#34C759" stroke-width="5" opacity=".7" stroke-linecap="round"/>
+                <text x="14" y="128" fill="#FF3B30" font-family="Share Tech Mono" font-size="13">♭</text>
+                <text x="237" y="128" fill="#FF3B30" font-family="Share Tech Mono" font-size="13">♯</text>
+                <text x="122" y="16" fill="#34C759" font-family="Share Tech Mono" font-size="12">✓</text>
+              </svg>
+              <div id="gneedle"></div>
+              <div class="gpivot"></div>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:10px">
+              <div class="note-big" id="note-big">—</div>
+              <div class="cents" id="cents-disp">— ¢</div>
+            </div>
+            <div id="tuner-target-note" style="font-size:13px;color:#8E8E93;padding:4px 14px;border-radius:20px;border:1px solid #48484A;display:none"></div>
+            <div id="tuner-status" style="font-size:13px;color:#EBEBF5;padding:5px 14px;border-radius:20px;border:1px solid #48484A">Microphone off</div>
+            <button class="mic-btn" id="mic-btn" onclick="toggleMic()">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="6" y="1" width="8" height="12" rx="4" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M3 9a7 7 0 0 0 14 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="10" y1="16" x2="10" y2="19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <span id="mic-lbl">Off</span>
+            </button>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">
+              <div class="tog-wrap">
+                <div class="tog" id="ref-tog" onclick="toggleRef()"><div class="tog-k"></div></div>
+                <span class="tog-lbl">Reference tone</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:13px;color:#8E8E93">
+                A4 = <input type="number" value="440" min="430" max="450" id="ref-hz" onchange="refFreq=+this.value"
+                  style="width:54px;background:#3A3A3C;border:none;border-radius:8px;color:#fff;font-size:13px;padding:5px 8px;text-align:center"/> Hz
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TUNINGS -->
+      <div id="sub-tunings" style="display:none;flex-direction:column;gap:8px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;">
+        <input class="field" id="tuning-search" placeholder="Search tuning…" oninput="renderTunings()" style="min-height:46px"/>
+        <div id="sel-tuning-box" class="card" style="display:none">
+          <div class="sec" id="sel-tuning-name"></div>
+          <div class="tv-visual" id="sel-tuning-visual"></div>
+          <button class="btn green" onclick="loadTuningInTuner()" style="min-height:44px;margin-top:8px;font-size:16px;letter-spacing:1px;gap:8px">
+            <svg width="18" height="20" viewBox="0 0 18 20" fill="none">
+              <path d="M6 15V5l10-2v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="4" cy="15" r="2.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <circle cx="14" cy="13" r="2.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            </svg>
+            Load
+          </button>
+        </div>
+        <div id="tunings-list"></div>
+      </div>
+
+      <!-- CHORDS -->
+      <div id="sub-chords" style="display:none;flex-direction:column;gap:8px;width:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;">
+
+        <div class="card" style="margin-top:0">
+          <div class="sec">Chord Finder</div>
+
+          <!-- Tuning selector -->
+          <div style="margin-bottom:10px">
+            <div style="font-size:11px;color:var(--t3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">Tuning</div>
+            <!-- Row 1: select full width -->
+            <select id="cf-tuning-sel" onchange="cfApplyTuning(this.value)"
+              style="width:100%;min-height:44px;background:var(--bg3);border:none;border-radius:10px;color:var(--t1);font-size:14px;padding:0 12px;margin-bottom:6px"></select>
+            <!-- Row 2: Custom + Save buttons full width -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button class="btn sm" onclick="cfOpenCustomStrings()" style="min-height:42px;gap:6px;font-size:14px">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="2" y1="4" x2="12" y2="4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="2" y1="10" x2="8" y2="10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                Custom
+              </button>
+              <button class="btn sm green" onclick="cfSaveCustomTuning()" style="min-height:42px;gap:6px;font-size:14px">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2h8l2 2v8a1 1 0 01-1 1H3a1 1 0 01-1-1V2z" stroke="currentColor" stroke-width="1.4" fill="none"/><rect x="4" y="8" width="6" height="4" rx=".5" stroke="currentColor" stroke-width="1.2" fill="none"/><rect x="4" y="2" width="5" height="3" rx=".5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+                Save
+              </button>
+            </div>
+            <!-- Custom strings panel -->
+            <div id="cf-custom-strings" style="display:none;margin-top:8px;background:var(--bg3);border-radius:10px;padding:12px;width:100%;">
+              <div style="font-size:11px;color:var(--t3);margin-bottom:8px">String notes · 6 (low) → 1 (high)</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%" id="cf-custom-grid"></div>
+            </div>
+          </div>
+
+          <!-- Capo selector -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;color:var(--t3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">Capo</div>
+            <select id="cf-capo-sel" onchange="cfSetCapo(+this.value)"
+              style="width:100%;min-height:44px;background:var(--bg3);border:none;border-radius:10px;
+                     color:var(--t1);font-size:15px;padding:0 14px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px">
+              <option value="0">No capo</option>
+              <option value="1">Capo 1</option>
+              <option value="2">Capo 2</option>
+              <option value="3">Capo 3</option>
+              <option value="4">Capo 4</option>
+              <option value="5">Capo 5</option>
+              <option value="6">Capo 6</option>
+              <option value="7">Capo 7</option>
+              <option value="8">Capo 8</option>
+              <option value="9">Capo 9</option>
+              <option value="10">Capo 10</option>
+              <option value="11">Capo 11</option>
+              <option value="12">Capo 12</option>
+            </select>
+          </div>
+
+          <!-- Interactive fretboard -->
+          <div style="overflow-x:auto;margin-bottom:14px">
+            <canvas id="cf-fretboard" height="160" style="width:100%;min-width:300px;border-radius:10px;background:var(--bg3);cursor:pointer;display:block"></canvas>
+          </div>
+
+          <div style="font-size:11px;color:var(--t3);text-align:center;margin-bottom:8px">
+            Tap a fret to place / remove a finger · Tap the X/O indicator at the left of each string to toggle mute / open
+          </div>
+          <!-- Result -->
+          <div id="cf-result" style="text-align:center;padding:16px;background:var(--bg3);border-radius:12px">
+            <div id="cf-chord-name" style="font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--accent);letter-spacing:2px">—</div>
+            <div id="cf-chord-notes" style="font-size:13px;color:var(--t3);margin-top:4px"></div>
+            <div id="cf-chord-alts" style="font-size:12px;color:var(--t3);margin-top:6px"></div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn sm" onclick="cfReset()" style="gap:5px">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7a5 5 0 1 0 1-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polyline points="0.5,2.5 2,4 3.5,2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Reset
+            </button>
+            <button class="btn sm green" onclick="cfAddToSelected()" style="gap:5px">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Add to selected
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sec">Chord library — tap to select</div>
+          <div class="chord-lib-btns" id="chord-lib"></div>
+          <div style="display:flex;gap:6px;align-items:center;margin-top:10px">
+            <input class="field" id="chord-manual" placeholder="Custom (e.g. Cadd9)" style="flex:1;min-height:42px"/>
+            <button class="btn sm red" onclick="addManualChord()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec">Selected chords</div>
+          <div id="chord-display" style="display:flex;gap:12px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ══ -->
+    <div class="panel" id="p-settings">
+      <div class="card">
+        <div class="sec">Skin</div>
+        <div class="skin-grid">
+          <div class="skin-opt on" id="opt-console" onclick="setSkin('console')">
+            <div class="skin-prev" style="background:#2C2C2E;border-radius:8px">
+              <svg width="32" height="22" viewBox="0 0 32 22" fill="none"><rect x="1" y="9" width="2.5" height="5" rx="1.25" fill="#FF3B30"/><rect x="5" y="6" width="2.5" height="11" rx="1.25" fill="#FF3B30"/><rect x="9" y="3" width="2.5" height="17" rx="1.25" fill="#FF3B30"/><rect x="13" y="6" width="2.5" height="11" rx="1.25" fill="#FF3B30"/><rect x="17" y="8" width="2.5" height="7" rx="1.25" fill="#FF3B30"/><rect x="21" y="10" width="2" height="4" rx="1" fill="#FF3B30"/></svg>
+            </div>
+            <div class="skin-title">Dictaphone</div>
+          </div>
+          <div class="skin-opt" id="opt-nb" onclick="setSkin('nb')">
+            <div class="skin-prev" style="background:#F9F9F9;border-radius:8px">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="2" width="20" height="24" rx="3" stroke="#D97757" stroke-width="1.8" fill="none"/><line x1="8" y1="9" x2="20" y2="9" stroke="#D97757" stroke-width="1.8" stroke-linecap="round"/><line x1="8" y1="14" x2="20" y2="14" stroke="#D97757" stroke-width="1.8" stroke-linecap="round"/><line x1="8" y1="19" x2="15" y2="19" stroke="#D97757" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </div>
+            <div class="skin-title">Notebook</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec">Legend</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--t2)">
+          <div style="display:flex;align-items:center;gap:8px"><div class="dot d"></div> Dictaphone reference</div>
+          <div style="display:flex;align-items:center;gap:8px"><div class="dot a"></div> App recording</div>
+          <div style="display:flex;align-items:center;gap:8px"><div class="dot v"></div> Video recording</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec">Data</div>
+        <div style="font-size:13px;color:var(--t3);margin-bottom:10px">All data saved locally in your browser.</div>
+        <button class="btn danger" style="gap:7px" onclick="showConfirm('Clear all data? This cannot be undone.',()=>{localStorage.removeItem('mook1');DB=[];CID=null;renderList();
+// Restore blob URLs from IndexedDB for takes in current DB
+DB.forEach(r=>{
+  (r.takes||[]).forEach((t,i)=>{
+    const idbKey=t.idbKey||takeKey(r.id,i);
+    if(!t.url&&idbKey){
+      idbLoad(idbKey).then(blob=>{
+        if(blob){t.url=URL.createObjectURL(blob);}
+      }).catch(()=>{});
+    }
+  });
+});toast('Cleared');})">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="2,4 14,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5.5 4V2.5a.5.5 0 01.5-.5h4a.5.5 0 01.5.5V4M6.5 7v5M9.5 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M3 4l.9 8.3A1 1 0 004.9 13h6.2a1 1 0 001-.7L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Clear all data
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /panels -->
+
+  <!-- NAV -->
+  <div id="nav">
+  <div id="nav-inner">
+    <button class="nb-btn active" id="nav-notebook" onclick="showPanel('notebook')">
+      <svg viewBox="0 0 26 26" fill="none"><rect x="4" y="2" width="18" height="22" rx="2.5" stroke="currentColor" stroke-width="1.6" fill="none"/><line x1="8" y1="8" x2="18" y2="8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="8" y1="12" x2="18" y2="12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="8" y1="16" x2="14" y2="16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Record
+    </button>
+    <button class="nb-btn" id="nav-studio" onclick="showPanel('studio')">
+      <svg viewBox="0 0 26 26" fill="none"><line x1="7" y1="4" x2="7" y2="22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="13" y1="4" x2="13" y2="22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="19" y1="4" x2="19" y2="22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="4.5" y="8" width="5" height="3.5" rx="1.75" fill="currentColor"/><rect x="10.5" y="14" width="5" height="3.5" rx="1.75" fill="currentColor"/><rect x="16.5" y="10" width="5" height="3.5" rx="1.75" fill="currentColor"/></svg>
+      Studio
+    </button>
+    <button class="nb-btn" id="nav-tools" onclick="showPanel('tools')">
+      <svg viewBox="0 0 26 26" fill="none"><path d="M5 21L11 15M11 15L14 12M11 15L9 17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M16 4C14.3 4 13 5.3 13 7C13 7.6 13.2 8.1 13.5 8.5L5.5 16.5L7.5 18.5L15.5 10.5C15.9 10.8 16.4 11 17 11C18.7 11 20 9.7 20 8C20 7.5 19.9 7.1 19.7 6.8L17.4 9.1L14.9 6.6L17.2 4.3C16.8 4.1 16.4 4 16 4Z" fill="currentColor"/><path d="M21 19L15 13L13 15L19 21L21 19Z" fill="currentColor"/></svg>
+      Tools
+    </button>
+  </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════
+// DATA
+// ══════════════════════════════════════
+let DB=[];try{DB=JSON.parse(localStorage.getItem('mook1')||'[]')}catch(e){}
+let CID=null,FM='all',lastPanel='notebook';
+function save(){localStorage.setItem('mook1',JSON.stringify(DB))}
+function gid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function fmtT(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0')}
+function nextNum(src){const n=DB.filter(d=>d.source===src).map(d=>d.numero);return n.length?Math.max(...n)+1:1}
+
+// ══════════════════════════════════════
+// SKIN
+// ══════════════════════════════════════
+let currentSkin='console';
+function setSkin(s){
+  currentSkin=s;
+  document.body.className=s==='nb'?'nb':'';
+  document.getElementById('opt-console').classList.toggle('on',s==='console');
+  document.getElementById('opt-nb').classList.toggle('on',s==='nb');
+  document.body.style.background=s==='nb'?'#E5E5EA':'#111';
+  drawEQCurve();
+}
+
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+function showPanel(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('p-'+id).classList.add('active');
+  const nb=document.getElementById('nav-'+id);if(nb)nb.classList.add('active');
+  if(id!=='settings')lastPanel=id;
+  if(id==='studio'){
+    setTimeout(()=>{buildEQ();drawEQCurve();if(curBuf)drawFullWave(curBuf);},80);
+    const r=CID?DB.find(d=>d.id===CID):null;
+    const lbl=document.getElementById('studio-rec-label');
+    if(lbl)lbl.textContent=r?r.titre:'';
+  }
+  if(id==='tools')setTimeout(initTools,50);
+}
+function goBackFromStudio(){
+  if(CID){showPanel('detail');}
+  else showPanel('notebook');
+}
+function toggleSettings(){
+  const active=document.querySelector('.panel.active');
+  if(active&&active.id==='p-settings')showPanel(lastPanel);
+  else showPanel('settings');
+}
+
+// ══════════════════════════════════════
+// NOTEBOOK LIST
+// ══════════════════════════════════════
+function setFilter(btn){
+  document.querySelectorAll('#p-notebook .pill').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');FM=btn.dataset.f;renderList();
+// Restore blob URLs from IndexedDB for takes in current DB
+DB.forEach(r=>{
+  (r.takes||[]).forEach((t,i)=>{
+    const idbKey=t.idbKey||takeKey(r.id,i);
+    if(!t.url&&idbKey){
+      idbLoad(idbKey).then(blob=>{
+        if(blob){t.url=URL.createObjectURL(blob);}
+      }).catch(()=>{});
+    }
+  });
+});
+}
+function renderList(){
+  const q=(document.getElementById('search')||{}).value?.toLowerCase()||'';
+  const items=DB.filter(d=>(FM==='all'||d.statut===FM)&&(!q||d.titre.toLowerCase().includes(q)||(d.numero+'').includes(q)));
+  const el=document.getElementById('rec-list');if(!el)return;
+  if(!items.length){
+    el.innerHTML=`<div style="font-size:14px;color:var(--t3);text-align:center;padding:32px 0">No recordings yet.<br>Tap Dictaphone, Record or Video to start.</div>`;return;
+  }
+  el.innerHTML=items.map(d=>`
+    <div class="rec-item-wrap" id="wrap-${d.id}">
+      <div class="swipe-star" id="star-${d.id}">
+        <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style="filter:drop-shadow(0 1px 3px rgba(0,0,0,.3))"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+      </div>
+      <div class="swipe-del" id="sdel-${d.id}">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><polyline points="3,6 21,6" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="rec-item ${d.id===CID?'active':''}" style="border-left:3px solid ${d.starred?'#fff':'transparent'}"
+        onclick="openDetail('${d.id}')"
+        ontouchstart="swipeStart(event,'${d.id}')"
+        ontouchmove="swipeMove(event,'${d.id}')"
+        ontouchend="swipeEnd(event,'${d.id}')"
+        onmousedown="swipeStart(event,'${d.id}')"
+        onmousemove="swipeMove(event,'${d.id}')"
+        onmouseup="swipeEnd(event,'${d.id}')">
+        <div class="dot ${d.source==='app'?'a':d.source==='video'?'v':'d'}"></div>
+        <div class="ri-info">
+          <div class="ri-title">${(d.starred?'☆ ':'')+d.titre}</div>
+          <div class="ri-meta">${d.tonalite||''}${d.capo>0?' · Capo '+d.capo:''} · ${d.date}${d.takes&&d.takes.length?' · '+d.takes.length+' take(s)':''}</div>
+        </div>
+        <div class="ri-badge ${d.statut==='draft'?'bd':d.statut==='inprogress'?'bp':'bk'}">${d.statut==='inprogress'?'In Prog':d.statut.charAt(0).toUpperCase()+d.statut.slice(1)}</div>
+      </div>
+    </div>`).join('');
+}
+function addNew(src){
+  const n=nextNum(src);
+  const lbl=src==='app'?'Record':src==='video'?'Video':'Dictaphone';
+  const rec={id:gid(),source:src,numero:n,titre:lbl+' #'+n,tonalite:'A',capo:0,accords:'',paroles:'',notes:'',statut:'draft',takes:[],videoTakes:[],chords:[],linkedIds:[],date:new Date().toLocaleDateString('en-GB')};
+  DB.unshift(rec);save();openDetail(rec.id);
+}
+function openDetail(id){CID=id;showPanel('detail');renderDetail();}
+
+// ══════════════════════════════════════
+// DETAIL
+// ══════════════════════════════════════
+const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+let autoSaveT=null;
+function autoSave(){
+  clearTimeout(autoSaveT);
+  autoSaveT=setTimeout(()=>{
+    const r=DB.find(d=>d.id===CID);if(!r)return;
+    r.titre=document.getElementById('d-titre')?.value||r.titre;
+    r.tonalite=document.getElementById('d-ton')?.value||r.tonalite;
+    r.capo=parseInt(document.getElementById('d-capo')?.value)||0;
+    r.accords=document.getElementById('d-accords')?.value||'';
+    r.paroles=document.getElementById('d-paroles')?.value||'';
+    r.notes=document.getElementById('d-notes')?.value||'';
+    if(r.source==='dictaphone'){r.dictRef=document.getElementById('d-ref')?.value||'';}
+    save();renderList();
+// Restore blob URLs from IndexedDB for takes in current DB
+DB.forEach(r=>{
+  (r.takes||[]).forEach((t,i)=>{
+    const idbKey=t.idbKey||takeKey(r.id,i);
+    if(!t.url&&idbKey){
+      idbLoad(idbKey).then(blob=>{
+        if(blob){t.url=URL.createObjectURL(blob);}
+      }).catch(()=>{});
+    }
+  });
+});
+    const as=document.getElementById('autosaved');if(as){as.style.opacity='1';setTimeout(()=>as.style.opacity='0',1500);}
+  },600);
+}
+function setStatut(s){
+  const r=DB.find(d=>d.id===CID);if(!r)return;r.statut=s;save();renderDetail();renderList();
+// Restore blob URLs from IndexedDB for takes in current DB
+DB.forEach(r=>{
+  (r.takes||[]).forEach((t,i)=>{
+    const idbKey=t.idbKey||takeKey(r.id,i);
+    if(!t.url&&idbKey){
+      idbLoad(idbKey).then(blob=>{
+        if(blob){t.url=URL.createObjectURL(blob);}
+      }).catch(()=>{});
+    }
+  });
+});
+}
+function confirmDelete(id){
+  const r=DB.find(d=>d.id===id);if(!r)return;
+  const name=r.titre||'this recording';
+  showConfirm('Delete "'+name+'"? This cannot be undone.',()=>deleteRec(id));
+}
+function deleteRec(id){
+  // called after confirmation
+  DB=DB.filter(d=>d.id!==id);
+  DB.forEach(d=>{d.linkedIds=(d.linkedIds||[]).filter(v=>v!==id);});
+  save();CID=null;renderList();
+// Restore blob URLs from IndexedDB for takes in current DB
+DB.forEach(r=>{
+  (r.takes||[]).forEach((t,i)=>{
+    const idbKey=t.idbKey||takeKey(r.id,i);
+    if(!t.url&&idbKey){
+      idbLoad(idbKey).then(blob=>{
+        if(blob){t.url=URL.createObjectURL(blob);}
+      }).catch(()=>{});
+    }
+  });
+});showPanel('notebook');
+}
+function linkRec(lid){
+  if(!lid||lid===CID)return;
+  const r=DB.find(d=>d.id===CID);if(!r)return;
+  if(!(r.linkedIds||[]).includes(lid)){r.linkedIds=r.linkedIds||[];r.linkedIds.push(lid);}
+  // reciprocal
+  const other=DB.find(d=>d.id===lid);
+  if(other&&!(other.linkedIds||[]).includes(CID)){other.linkedIds=other.linkedIds||[];other.linkedIds.push(CID);}
+  save();renderDetail();
+}
+function unlinkRec(lid){
+  const r=DB.find(d=>d.id===CID);if(!r)return;
+  r.linkedIds=(r.linkedIds||[]).filter(v=>v!==lid);
+  const other=DB.find(d=>d.id===lid);
+  if(other)other.linkedIds=(other.linkedIds||[]).filter(v=>v!==CID);
+  save();renderDetail();
+}
+
+function renderDetail(){
+  const r=DB.find(d=>d.id===CID);if(!r)return;
+  const el=document.getElementById('detail-content');if(!el)return;
+  const srcLabel=r.source==='video'?'Video':r.source==='app'?'Record':'Dictaphone';
+  const srcColor=r.source==='app'?'var(--green)':r.source==='video'?'var(--blue)':'var(--accent)';
+  const tonOpts=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"].map(n=>`<option value="${n}" ${r.tonalite===n?'selected':''}>${n}</option>`).join('');
+  const capOpts=`<option value="0" ${r.capo===0?'selected':''}>No capo</option>`+Array.from({length:12},(_,i)=>`<option value="${i+1}" ${r.capo===i+1?'selected':''}>Capo ${i+1}</option>`).join('');
+  const linked=(r.linkedIds||[]).map(id=>DB.find(d=>d.id===id)).filter(Boolean);
+  const others=DB.filter(d=>d.id!==CID&&!(r.linkedIds||[]).includes(d.id));
+  const linkedHTML=linked.length?linked.map(l=>`
+    <div class="linked-item" onclick="openDetail('${l.id}')">
+      <div class="dot ${l.source==='app'?'a':l.source==='video'?'v':'d'}"></div>
+      <div class="li-title">${l.titre}</div>
+      <span style="font-size:11px;color:var(--t3)">${l.statut}</span>
+      <button class="li-remove" onclick="event.stopPropagation();unlinkRec('${l.id}')" aria-label="Unlink">×</button>
+    </div>`).join(''):'<div style="font-size:13px;color:var(--t3)">No linked recordings</div>';
+  const linkSelectOpts=others.length?others.map(d=>`<option value="${d.id}">${d.source==='app'?'A':d.source==='video'?'V':'D'}#${d.numero} — ${d.titre}</option>`).join(''):'<option value="">No other recordings</option>';
+
+  // Shortcut buttons (other sources)
+  // All 3 icons always visible — active one bigger, same order: Dictaphone | Record | Video
+  const iconDict = `<svg viewBox="0 0 34 28" fill="none"><rect x="1" y="12" width="3" height="6" rx="1.5" fill="white" opacity=".6"/><rect x="6" y="8" width="3" height="14" rx="1.5" fill="white" opacity=".8"/><rect x="11" y="3" width="3" height="24" rx="1.5" fill="white"/><rect x="16" y="6" width="3" height="18" rx="1.5" fill="white" opacity=".85"/><rect x="21" y="9" width="3" height="12" rx="1.5" fill="white" opacity=".65"/><rect x="26" y="11" width="3" height="8" rx="1.5" fill="white" opacity=".45"/></svg>`;
+  const iconRec  = `<svg viewBox="0 0 28 30" fill="none"><rect x="8" y="1" width="12" height="16" rx="6" stroke="white" stroke-width="1.8" fill="none"/><path d="M4 14a10 10 0 0 0 20 0" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none"/><line x1="14" y1="24" x2="14" y2="29" stroke="white" stroke-width="1.8" stroke-linecap="round"/><line x1="8" y1="29" x2="20" y2="29" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>`;
+  const iconVid  = `<svg viewBox="0 0 32 24" fill="none"><rect x="1" y="3" width="20" height="18" rx="3" stroke="white" stroke-width="1.8" fill="none"/><path d="M21 9l9-4v14l-9-4V9Z" stroke="white" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>`;
+
+  function srcBtn(src, icon, bg, label){
+    const isActive = r.source === src;
+    const size = isActive ? 62 : 42;
+    const opacity = isActive ? '1' : '0.5';
+    const shadow = isActive ? `0 0 16px ${bg}88` : 'none';
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .2s">
+      <button onclick="addNew('${src}')" title="${label}"
+        style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};color:#fff;border:none;cursor:pointer;
+               display:flex;align-items:center;justify-content:center;opacity:${opacity};
+               box-shadow:${shadow};transition:all .2s;flex-shrink:0">
+        <svg width="${Math.round(size*.52)}" height="${Math.round(size*.52)}">${icon.replace('<svg','<svg').replace('viewBox','viewBox')}</svg>
+      </button>
+      ${isActive ? `<span style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:.5px;color:var(--t2)">${label.toUpperCase()} #${r.numero}</span>` : ''}
+    </div>`;
+  }
+
+  const shortcuts = `
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+      ${srcBtn('dictaphone', iconDict, 'var(--accent)', 'Dictaphone')}
+      ${srcBtn('app',        iconRec,  'var(--green)',  'Record')}
+      ${srcBtn('video',      iconVid,  'var(--blue)',   'Video')}
+    </div>
+  `;
+
+  // Source-specific top section
+  let topSection = '';
+
+  if(r.source==='dictaphone'){
+    topSection = `
+    <div class="card" style="margin-bottom:10px">
+      <div class="sec">Voice Memos Reference</div>
+      <div style="font-size:13px;color:var(--t3);margin-bottom:10px;line-height:1.6">
+        In Voice Memos: tap Share → Save to Files, then import here.
+      </div>
+      <div style="margin-bottom:12px">
+        <label class="lbl">Reference in Voice Memos</label>
+        <input class="field" id="d-ref" value="${r.dictRef||''}" placeholder="e.g. Recording 42 or chorus idea…" oninput="autoSave()" style="min-height:44px"/>
+      </div>
+      <label class="lbl">Import audio file</label>
+      <button class="btn green" onclick="dictImportAudio()" style="min-height:48px;gap:10px;width:100%;margin-bottom:10px;font-size:15px">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 3v10M7 10l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 15v1a1 1 0 001 1h12a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        Import .m4a / .wav from Files
+      </button>
+      <input type="file" id="dict-file-input" accept="audio/*" style="display:none" onchange="dictHandleFile(event)"/>
+      <div id="dict-takes-list"></div>
+    </div>`;
+  }
+
+  if(r.source==='app'){
+    topSection = `
+    <div class="card" style="margin-bottom:10px">
+      <div class="sec">Record</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <button id="rec-btn-d" class="play-circ" onclick="recState==='idle'?startRec():stopRec()" style="width:56px;height:56px;flex-shrink:0">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" id="rec-icon-d"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="5" fill="white"/></svg>
+        </button>
+        <div>
+          <div id="rec-timer-d" style="font-family:var(--font-display);font-size:28px;color:var(--accent);font-variant-numeric:tabular-nums">00:00</div>
+          <div id="rec-status-d" style="font-size:12px;color:var(--t3)">Press to record</div>
+        </div>
+        <canvas id="rec-cv-d" height="40" style="width:100%;min-width:0;border-radius:8px;background:var(--bg3);flex:1;overflow:hidden"></canvas>
+      </div>
+      <div style="display:flex;gap:6px" id="rec-actions-d">
+        <button class="btn sm" id="pause-btn-d" onclick="pauseRec()" style="display:none;flex:1">Pause</button>
+        <button class="btn sm danger" id="stop-btn-d" onclick="stopRec()" style="display:none;flex:1">Stop & Save</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="sec">Takes</div>
+      <div id="takes-inline"></div>
+    </div>`;
+  }
+
+  if(r.source==='video'){
+    topSection = `
+    <div class="card" style="margin-bottom:10px">
+      <div class="sec">Video Record</div>
+      <video id="video-preview" style="width:100%;border-radius:10px;background:#000;max-height:220px;object-fit:cover;margin-bottom:10px" autoplay muted playsinline></video>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button class="btn blue" onclick="startVideoRec()" id="video-rec-btn" style="flex:1;min-height:48px;gap:8px;font-size:15px">
+          <svg width="18" height="18" viewBox="0 0 32 24" fill="none"><rect x="1" y="3" width="20" height="18" rx="3" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M21 9l9-4v14l-9-4V9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+          Start Video
+        </button>
+        <button class="btn danger" onclick="stopVideoRec()" id="video-stop-btn" style="display:none;flex:1;min-height:48px">Stop</button>
+      </div>
+      <div id="video-takes"></div>
+    </div>`;
+  }
+
+  // Takes list for app (inline)
+  const takesHTML=(r.takes||[]).length?(r.takes||[]).map((t,i)=>`
+    <div style="padding:8px 0;border-bottom:.5px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:600;color:var(--t3);min-width:18px">${i+1}</span>
+        <span style="font-size:12px;color:var(--t3)">${fmtT(t.dur||0)}</span>
+        <div style="flex:1"></div>
+        <button onclick="playTake(${i})" style="width:34px;height:34px;border-radius:50%;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polygon points="2,1 11,6 2,11" fill="white"/></svg>
+        </button>
+        <button onclick="loadTakeEditor(${i});showPanel('studio')" title="Studio"
+          style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="16" height="16" viewBox="0 0 26 26" fill="none"><line x1="7" y1="4" x2="7" y2="22" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="4" x2="13" y2="22" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="19" y1="4" x2="19" y2="22" stroke="white" stroke-width="2" stroke-linecap="round"/><rect x="4.5" y="8" width="5" height="3.5" rx="1.75" fill="white"/><rect x="10.5" y="14" width="5" height="3.5" rx="1.75" fill="white"/><rect x="16.5" y="10" width="5" height="3.5" rx="1.75" fill="white"/></svg>
+        </button>
+        <button onclick="delTake(${i})" title="Delete"
+          style="width:36px;height:36px;border-radius:50%;background:rgba(255,59,48,.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="1,3.5 13,3.5" stroke="#FF3B30" stroke-width="1.4" stroke-linecap="round"/><path d="M4.5 3.5V2.2a.5.5 0 01.5-.5h3.5a.5.5 0 01.5.5v1.3M5 6v5M9 6v5" stroke="#FF3B30" stroke-width="1.4" stroke-linecap="round"/><path d="M2.5 3.5l.8 7.3a1 1 0 001 .9h5.4a1 1 0 001-.9l.8-7.3" stroke="#FF3B30" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <canvas id="tk${i}" width="300" height="36"
+        style="width:100%;border-radius:8px;background:var(--bg3);cursor:pointer;display:block"
+        onclick="loadTakeEditor(${i});showPanel('studio')" title="Open in Studio"></canvas>
+    </div>`).join(''):'<div style="font-size:13px;color:var(--t3)">No takes yet.</div>';
+
+
+  el.innerHTML=`
+    <!-- Row 1: Back | Delete -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <button class="btn sm" onclick="showPanel('notebook')" style="gap:6px;min-height:38px;padding:0 14px">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><polyline points="10,3 4,8 10,13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </button>
+      <button class="btn icon-only sm danger" onclick="confirmDelete('${r.id}')" style="width:38px;height:38px;border-radius:50%">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><polyline points="1.5,4 13.5,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V2.5a.5.5 0 01.5-.5h4a.5.5 0 01.5.5V4M6 6.5v5M9 6.5v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M2.5 4l.9 7.8a1 1 0 001 .9h6.2a1 1 0 001-.9L12.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <!-- Row 2: 3 icons centered -->
+    <div style="margin-bottom:18px">
+      ${shortcuts}
+    </div>
+
+    <!-- Source-specific top block -->
+    ${topSection}
+
+    <!-- Common fields -->
+    <div class="card" style="margin-bottom:10px">
+      <input class="title-field" id="d-titre" value="${r.titre}" placeholder="Title…" oninput="autoSave()"/>
+      <div class="stat-row">
+        <button class="stat draft ${r.statut==='draft'?'on':''}" onclick="setStatut('draft')">Draft</button>
+        <button class="stat prog ${r.statut==='inprogress'?'on':''}" onclick="setStatut('inprogress')">In Progress</button>
+        <button class="stat done ${r.statut==='done'?'on':''}" onclick="setStatut('done')">Done</button>
+      </div>
+      <div class="g3" style="margin-bottom:12px">
+        <div><label class="lbl">Key</label><select class="field" id="d-ton" onchange="autoSave()" style="min-height:44px">${tonOpts}</select></div>
+        <div><label class="lbl">Capo</label><select class="field" id="d-capo" onchange="autoSave()" style="min-height:44px">${capOpts}</select></div>
+        <div><label class="lbl">Date</label><input class="field" value="${r.date}" readonly style="min-height:44px;opacity:.6"/></div>
+      </div>
+      <div style="margin-bottom:12px"><label class="lbl">Chord progression</label><input class="field" id="d-accords" value="${r.accords||''}" placeholder="Am — F — C — G…" oninput="autoSave()" style="min-height:44px"/></div>
+      <div style="margin-bottom:12px"><label class="lbl">Lyrics / ideas</label><textarea class="field" id="d-paroles" oninput="autoSave()" placeholder="Verse, chorus, bridge…">${r.paroles||''}</textarea></div>
+      <div style="margin-bottom:8px"><label class="lbl">Notes</label><textarea class="field" id="d-notes" oninput="autoSave()" placeholder="Tempo, mood, instrumentation…" style="min-height:60px">${r.notes||''}</textarea></div>
+      <div id="autosaved" class="autosaved">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Auto-saved
+      </div>
+    </div>
+
+    <!-- Linked recordings -->
+    <div class="card">
+      <div class="sec">Linked — versions & updates</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">${linkedHTML}</div>
+      ${others.length?`
+      <div style="display:flex;gap:6px;align-items:center">
+        <select class="field" id="link-sel" style="flex:1;min-height:44px">
+          <option value="">Link a recording…</option>
+          ${linkSelectOpts}
+        </select>
+        <button class="btn sm green" onclick="linkRec(document.getElementById('link-sel').value)" style="min-height:44px;padding:0 14px">Link</button>
+      </div>`:'<div style="font-size:13px;color:var(--t3)">No other recordings to link.</div>'}
+    </div>
+  `;
+
+  // Populate takes-inline for app
+  if(r.source==='app'){
+    const ti=document.getElementById('takes-inline');
+    if(ti)ti.innerHTML=takesHTML;
+    setTimeout(()=>{
+      (r.takes||[]).forEach((t,i)=>{const cv=document.getElementById('tk'+i);if(cv&&t.wave)drawMini(cv,t.wave,'var(--green)');});
+    },50);
+  }
+  // Dictaphone takes
+  if(r.source==='dictaphone'){
+    setTimeout(renderDictTakesList,50);
+  }
+  // Video takes
+  if(r.source==='video'){
+    setTimeout(()=>{renderVideoTakes();},50);
+  }
+}
+
+// ══════════════════════════════════════
+// RECORDER
+// ══════════════════════════════════════
+let recState='idle',recSec=0,recTimer=null,mediaRec=null,recStream=null,recChunks=[],recAnalyser=null,recAnimF=null;
+async function startRec(){
+  if(!CID){toast('Select a recording first');showPanel('notebook');return;}
+  try{
+    recStream=await navigator.mediaDevices.getUserMedia({audio:{
+      echoCancellation:true,noiseSuppression:true,sampleRate:48000
+    }});
+    const actx=new AudioContext({sampleRate:48000});
+    const micSrc=actx.createMediaStreamSource(recStream);
+
+    // Signal chain: Mic → Gain → Compressor → Limiter → Analyser → Recorder
+    const inputGain=actx.createGain();inputGain.gain.value=1.8;
+
+    const comp=actx.createDynamicsCompressor();
+    comp.threshold.value=-18;comp.knee.value=10;
+    comp.ratio.value=3;comp.attack.value=0.005;comp.release.value=0.12;
+
+    // Makeup gain to boost quiet sounds after compression
+    const makeupGain=actx.createGain();makeupGain.gain.value=1.5;
+
+    const limiter=actx.createDynamicsCompressor();
+    limiter.threshold.value=-1;limiter.knee.value=0;
+    limiter.ratio.value=20;limiter.attack.value=0.001;limiter.release.value=0.1;
+
+    recAnalyser=actx.createAnalyser();recAnalyser.fftSize=1024;
+
+    micSrc.connect(inputGain);
+    inputGain.connect(comp);
+    comp.connect(makeupGain);
+    makeupGain.connect(limiter);
+    limiter.connect(recAnalyser);
+
+    // Record from processed stream
+    const dest=actx.createMediaStreamDestination();
+    limiter.connect(dest);
+    recChunks=[];
+    // iOS Safari supports audio/mp4, use it for better compatibility
+    let options={audioBitsPerSecond:320000};
+    if(MediaRecorder.isTypeSupported('audio/mp4')){
+      options.mimeType='audio/mp4';
+    } else if(MediaRecorder.isTypeSupported('audio/webm;codecs=opus')){
+      options.mimeType='audio/webm;codecs=opus';
+    } else if(MediaRecorder.isTypeSupported('audio/webm')){
+      options.mimeType='audio/webm';
+    }
+    console.log('Recording with mimeType:',options.mimeType||'default');
+    mediaRec=new MediaRecorder(dest.stream,options);
+    mediaRec.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};
+    mediaRec.onstop=finishRec;mediaRec.start(100);recState='recording';recSec=0;
+    recTimer=setInterval(()=>{recSec++;updRecUI();},1000);updRecUI();drawLive();
+  }catch(e){toast('Microphone access denied — HTTPS required on iPhone');}
+}
+function pauseRec(){
+  if(recState==='recording'){mediaRec.pause();recState='paused';clearInterval(recTimer);updRecUI();}
+  else if(recState==='paused'){mediaRec.resume();recState='recording';recTimer=setInterval(()=>{recSec++;updRecUI();},1000);drawLive();updRecUI();}
+}
+function stopRec(){
+  if(recState==='idle')return;
+  clearInterval(recTimer);cancelAnimationFrame(recAnimF);
+  if(mediaRec&&mediaRec.state!=='inactive')mediaRec.stop();
+  recStream&&recStream.getTracks().forEach(t=>t.stop());
+  recState='idle';updRecUI();
+}
+// In-memory buffer store for takes (not persisted, only for current session)
+const _takeBufs={};
+
+function finishRec(){
+  const blob=new Blob(recChunks,{type:'audio/webm'});
+  const r=DB.find(d=>d.id===CID);if(!r)return;
+  const waveSnap=getWaveSnap();
+  const takeIdx=(r.takes||[]).length;
+  r.takes=r.takes||[];
+  const idbKey=takeKey(CID,takeIdx);
+  r.takes.push({idbKey,dur:recSec,wave:waveSnap,date:new Date().toLocaleDateString('en-GB')});
+  save();
+
+  // Save blob to IndexedDB for persistence
+  // Keep blob reference for this session
+  const _sessionBlobs = window._sessionBlobs || (window._sessionBlobs={});
+  _sessionBlobs[idbKey] = blob;
+  const url=URL.createObjectURL(blob);
+  r.takes[takeIdx].url=url;
+  idbSave(idbKey,blob).then(()=>{
+    // Use analyser snapshot for waveform — no decodeAudioData needed
+    // This avoids the WebM/Opus decoding issue on iOS Safari
+    {const buf=null;if(false){
+    // wave already captured by getWaveSnap() above
+    save();
+    const cv=document.getElementById('tk'+takeIdx);
+    if(cv){cv.width=cv.parentElement?.clientWidth||300;cv.height=36;drawMini(cv,r.takes[takeIdx].wave,'#fff');}
+    }if(false){}}// end dummy block
+  }).catch(()=>toast('Storage error'));
+
+  renderDetail();
+  toast('Take saved!');
+}
+// Rolling waveform accumulator during recording
+let _waveAcc=[];
+function snapWave(){
+  if(!recAnalyser)return;
+  const buf=new Uint8Array(recAnalyser.fftSize);
+  recAnalyser.getByteTimeDomainData(buf);
+  let rms=0;for(let i=0;i<buf.length;i++)rms+=Math.pow((buf[i]-128)/128,2);
+  _waveAcc.push(Math.min(1,Math.sqrt(rms/buf.length)*4));
+}
+function getWaveSnap(){
+  if(!_waveAcc.length)return Array(60).fill(0.05);
+  // Downsample to 80 bars
+  const bars=80,src=_waveAcc;
+  const step=Math.max(1,Math.floor(src.length/bars));
+  return Array.from({length:bars},(_,i)=>{
+    let mx=0;for(let j=0;j<step;j++){const v=src[Math.min(i*step+j,src.length-1)]||0;if(v>mx)mx=v;}
+    return mx;
+  });
+}
+// Rolling waveform bars — Voice Memos style
+let _recBars=[];const _maxBars=80;
+function drawLive(){
+  const cv=document.getElementById('rec-cv-d');if(!cv||!recAnalyser)return;
+  const W=cv.parentElement?.clientWidth||300;const H=56;
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  function tick(){
+    if(recState!=='recording'){return;}
+    recAnimF=requestAnimationFrame(tick);
+    // Sample RMS amplitude
+    const buf=new Uint8Array(recAnalyser.fftSize);
+    recAnalyser.getByteTimeDomainData(buf);
+    let rms=0;for(let i=0;i<buf.length;i++)rms+=Math.pow((buf[i]-128)/128,2);
+    const amp=Math.sqrt(rms/buf.length);
+    _recBars.push(Math.max(0.04,amp*3.5));
+    if(_recBars.length>_maxBars)_recBars.shift();
+    // Draw bars
+    ctx.clearRect(0,0,W,H);
+    const bw=W/_maxBars;
+    _recBars.forEach((v,i)=>{
+      const h=Math.max(3,v*(H-6));
+      const x=i*bw;const y=(H-h)/2;
+      // Color: bright red for recent, fading for older
+      const age=(_recBars.length-1-i)/_maxBars;
+      ctx.fillStyle=`rgba(255,59,48,${1-age*0.6})`;
+      ctx.beginPath();
+      if(ctx.roundRect)ctx.roundRect(x+0.5,y,Math.max(1,bw-1.5),h,2);
+      else ctx.rect(x+0.5,y,Math.max(1,bw-1.5),h);
+      ctx.fill();
+    });
+  }
+  _recBars=[];tick();
+}
+function updRecUI(){
+  const btn=document.getElementById('rec-btn-d');
+  const icon=document.getElementById('rec-icon-d');
+  const timer=document.getElementById('rec-timer-d');
+  const status=document.getElementById('rec-status-d');
+  const pb=document.getElementById('pause-btn-d');
+  const sb=document.getElementById('stop-btn-d');
+  if(!btn)return;
+  if(recState==='idle'){
+    btn.style.background='var(--accent)';btn.classList.remove('rec-pulse');
+    icon.innerHTML='<circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="5" fill="white"/>';
+    if(timer)timer.textContent='00:00';if(status)status.textContent='Press to record';
+    if(pb)pb.style.display='none';if(sb)sb.style.display='none';
+  }else if(recState==='recording'){
+    btn.style.background='var(--accent)';btn.classList.add('rec-pulse');
+    icon.innerHTML='<circle cx="12" cy="12" r="5" fill="white"/>';
+    if(timer)timer.textContent=fmtT(recSec);if(status)status.textContent='Recording…';
+    if(pb){pb.style.display='flex';pb.textContent='Pause';}if(sb)sb.style.display='flex';
+  }else{
+    btn.style.background='var(--accent)';
+    icon.innerHTML='<polygon points="9,7 17,12 9,17" fill="white"/>';
+    if(timer)timer.textContent=fmtT(recSec);if(status)status.textContent='Paused';
+    if(pb)pb.textContent='Resume';
+  }
+}
+function playTake(i){
+  const r=DB.find(d=>d.id===CID);if(!r)return;
+  const t=r.takes[i];if(!t){toast('No audio');return;}
+  const idbKey=t.idbKey||takeKey(CID,i);
+
+  // Priority 1: fresh blob URL from session blob
+  const sb=window._sessionBlobs&&window._sessionBlobs[idbKey];
+  if(sb){_playURL(URL.createObjectURL(sb),idbKey);return;}
+
+  // Priority 2: existing session URL
+  if(t.url){_playURL(t.url,idbKey);return;}
+
+  // Priority 3: load blob from IndexedDB and create URL
+  idbLoad(idbKey).then(blob=>{
+    if(!blob){toast('Take not found — re-record');return;}
+    window._sessionBlobs=window._sessionBlobs||{};
+    window._sessionBlobs[idbKey]=blob;
+    const url=URL.createObjectURL(blob);
+    t.url=url;
+    _playURL(url,idbKey);
+  }).catch(()=>toast('Storage error'));
+}
+
+let _currentAudio = null;
+
+function _playURL(url, cacheKey){
+  if(_currentAudio){_currentAudio.pause();_currentAudio.src='';_currentAudio=null;}
+  const audio = new Audio(url);
+  audio.volume = 1.0;
+  _currentAudio = audio;
+  audio.play()
+    .then(()=>toast('▶ Playing'))
+    .catch(e=>{
+      toast('Tap the screen once then try again');
+      console.warn('play() blocked:',e);
+    });
+}
+
+function _playAudioBuf(buf){
+  const ctx=getCtx();
+  if(ctx.state==='suspended'){ctx.resume().then(()=>_playAudioBuf(buf));return;}
+  if(sourceNode){try{sourceNode.stop();}catch(e){}}
+  sourceNode=ctx.createBufferSource();
+  sourceNode.buffer=buf;
+  const g=ctx.createGain();g.gain.value=1.5;
+  sourceNode.connect(g);g.connect(ctx.destination);
+  sourceNode.start(0);
+  toast('▶ Playing');
+}
+function delTake(i){
+  const r=DB.find(d=>d.id===CID);if(!r)return;
+  const t=r.takes[i];
+  if(t){
+    const idbKey=t.idbKey||takeKey(CID,i);
+    idbDelete(idbKey).catch(()=>{});
+    delete _takeBufs[idbKey];
+    if(t.url)URL.revokeObjectURL(t.url);
+  }
+  r.takes.splice(i,1);save();renderDetail();
+}
+function loadTakeEditor(i){
+  const r=DB.find(d=>d.id===CID);if(!r)return;
+  const t=r.takes[i];if(!t)return;
+  const idbKey=t.idbKey||takeKey(CID,i);
+  cuts=[];selStart=-1;selEnd=-1;curBuf=null;pbOff=0;isPlaying=false;
+
+  // Get blob URL — from session blob (most reliable) or stored URL
+  const sb=window._sessionBlobs&&window._sessionBlobs[idbKey];
+  const url=sb?URL.createObjectURL(sb):t.url;
+  _studioTakeURL=url;
+
+  showPanel('studio');
+  setTimeout(()=>{
+    if(url){
+      loadAudio(url,t.dur);
+    } else {
+      // Try IndexedDB
+      idbLoad(idbKey).then(blob=>{
+        if(!blob){toast('Audio not found');return;}
+        const u=URL.createObjectURL(blob);
+        _studioTakeURL=u;
+        loadAudio(u,t.dur);
+      });
+    }
+  },100);
+}
+function drawMini(cv,wave,col){
+  const ctx=cv.getContext('2d');
+  const W=cv.width||300, H=cv.height||36;
+  ctx.clearRect(0,0,W,H);
+  const n=wave.length||60;
+  const bw=W/n;
+  // Dark background
+  ctx.fillStyle='#2C2C2E';
+  ctx.roundRect?ctx.roundRect(0,0,W,H,6):ctx.rect(0,0,W,H);
+  ctx.fill();
+  // White bars
+  wave.forEach((v,i)=>{
+    const amp=Math.max(0.04,v);
+    const h=Math.max(3,Math.min(H-4,amp*(H-4)*1.8));
+    const x=i*bw+0.5;
+    const y=(H-h)/2;
+    ctx.fillStyle=col||'#FFFFFF';
+    ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(x,y,Math.max(1,bw-1),h,1);
+    else ctx.rect(x,y,Math.max(1,bw-1),h);
+    ctx.fill();
+  });
+}
+
+// ══════════════════════════════════════
+// EQ
+// ══════════════════════════════════════
+const EQ_BANDS=[{f:'60',freq:60},{f:'120',freq:120},{f:'250',freq:250},{f:'500',freq:500},{f:'1k',freq:1000},{f:'2k',freq:2000},{f:'4k',freq:4000},{f:'8k',freq:8000}];
+const EQ_PRESETS={Flat:[0,0,0,0,0,0,0,0],Vocal:[-4,0,4,8,6,4,2,0],Acoustic:[4,3,0,-2,2,4,6,4],'Bass+':[10,8,5,2,-2,-2,0,0],Presence:[-2,0,0,4,8,10,6,2],Air:[-2,-2,0,0,2,5,9,12],'Lo-fi':[6,4,2,-4,-6,-6,-4,-8],Warm:[4,6,2,0,-2,-4,-4,-6]};
+let gains=[0,0,0,0,0,0,0,0],eqOn=true,activePreset='Flat',revOn=false,revType='Room';
+
+function buildEQ(){
+  const w=document.getElementById('eq-bands');if(!w)return;
+  w.innerHTML=EQ_BANDS.map((b,i)=>`<div class="eq-band">
+    <div class="eq-bv" id="bv${i}">${gains[i]>0?'+':''}${gains[i]}</div>
+    <input type="range" min="-12" max="12" step="1" value="${gains[i]}" id="br${i}" oninput="setGain(${i},+this.value)" aria-label="${b.f}Hz"/>
+    <label>${b.f}</label>
+  </div>`).join('');
+  buildEQPresets();drawEQCurve();
+}
+function buildEQPresets(){
+  const w=document.getElementById('eq-presets');if(!w)return;
+  w.innerHTML=Object.keys(EQ_PRESETS).map(k=>`<button class="ep ${k===activePreset?'on':''}" onclick="applyPreset('${k}')">${k}</button>`).join('');
+}
+function setGain(i,v){gains[i]=v;const l=document.getElementById('bv'+i);if(l)l.textContent=(v>0?'+':'')+v;activePreset='';buildEQPresets();drawEQCurve();}
+function applyPreset(name){
+  gains=EQ_PRESETS[name].slice();activePreset=name;
+  EQ_BANDS.forEach((_,i)=>{const r=document.getElementById('br'+i);const l=document.getElementById('bv'+i);if(r)r.value=gains[i];if(l)l.textContent=(gains[i]>0?'+':'')+gains[i];});
+  buildEQPresets();drawEQCurve();
+}
+function resetEQ(){applyPreset('Flat');}
+function toggleEQBands(){
+  const w=document.getElementById('eq-bands-wrap');
+  const b=document.getElementById('eq-bands-btn');
+  if(!w)return;
+  const open=w.style.display==='none';
+  w.style.display=open?'block':'none';
+  if(b)b.textContent=open?'Hide Bands':'Show Bands';
+  if(open){buildEQ();drawEQCurve();}
+}
+function toggleEQ(){eqOn=!eqOn;const t=document.getElementById('eq-tog');const l=document.getElementById('eq-lbl');if(t)t.classList.toggle('on',eqOn);if(l)l.textContent=eqOn?'EQ On':'EQ Off';}
+function previewEQ(){if(curBuf)playBufWithFX(curBuf,0);else toast('Open a take in the editor first');}
+function drawEQCurve(){
+  const cv=document.getElementById('eq-curve');if(!cv)return;
+  const W=cv.parentElement?.clientWidth||300;cv.width=W;cv.height=100;const H=100;
+  const ctx=cv.getContext('2d');ctx.clearRect(0,0,W,H);
+  const dark=currentSkin==='console';
+  const gc=dark?'rgba(255,255,255,.05)':'rgba(0,0,0,.06)';const mid=H/2;
+  for(let db=-12;db<=12;db+=6){
+    const y=mid-(db/12)*(mid-6);ctx.strokeStyle=gc;ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
+  }
+  const col=dark?'#FF3B30':'#D97757';
+  ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();
+  for(let px=0;px<W;px++){
+    const freq=20*Math.pow(10000,px/W);let g=0;
+    EQ_BANDS.forEach((b,i)=>{const d=Math.abs(Math.log2(freq/b.freq));g+=gains[i]*Math.exp(-d*d*2);});
+    const y=mid-(g/12)*(mid-6);px?ctx.lineTo(px,y):ctx.moveTo(px,y);
+  }
+  ctx.stroke();ctx.lineTo(W,mid);ctx.lineTo(0,mid);
+  ctx.fillStyle=dark?'rgba(255,59,48,.08)':'rgba(217,119,87,.08)';ctx.fill();
+}
+function toggleRev(){revOn=!revOn;const t=document.getElementById('rev-tog');const l=document.getElementById('rev-lbl');if(t)t.classList.toggle('on',revOn);if(l)l.textContent=revOn?'Reverb On':'Reverb Off';}
+function setRevType(btn){revType=btn.dataset.rt;document.querySelectorAll('.rt').forEach(b=>b.classList.toggle('on',b.dataset.rt===revType));}
+function updDW(v){const l=document.getElementById('dw-lbl');if(l)l.textContent=v+'%';}
+function makeIR(actx,type){
+  const p={Room:{d:1.2,dc:2},Hall:{d:3,dc:4},Plate:{d:2,dc:3}}[type]||{d:1.2,dc:2};
+  const sr=actx.sampleRate,len=Math.round(sr*p.d);const buf=actx.createBuffer(2,len,sr);
+  for(let ch=0;ch<2;ch++){const d=buf.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,p.dc);}return buf;
+}
+
+// ══════════════════════════════════════
+// AUDIO ENGINE
+// ══════════════════════════════════════
+let audioCtx=null,sourceNode=null,curBuf=null,cuts=[],selStart=-1,selEnd=-1,dragging=false,isPlaying=false,pbStart=0,pbOff=0,phAnim=null;
+function getCtx(){if(!audioCtx||audioCtx.state==='closed')audioCtx=new AudioContext();return audioCtx;}
+function playBufWithFX(buf,offset){
+  const ctx=getCtx();if(sourceNode){try{sourceNode.stop();}catch(e){}}
+  sourceNode=ctx.createBufferSource();sourceNode.buffer=buf;
+  const dest=ctx.destination;let node=sourceNode;
+  if(eqOn&&gains.some(g=>g!==0)){
+    const fs=EQ_BANDS.map((b,i)=>{const f=ctx.createBiquadFilter();f.type=i===0?'lowshelf':i===7?'highshelf':'peaking';f.frequency.value=b.freq;f.gain.value=gains[i];f.Q.value=1.2;return f;});
+    fs.reduce((a,b)=>{a.connect(b);return b;},node);node=fs[fs.length-1];
+  }
+  if(revOn){
+    const dw=+(document.getElementById('dw-knob')?.value||70);
+    const dg=ctx.createGain();dg.gain.value=dw/100;
+    const wg=ctx.createGain();wg.gain.value=(100-dw)/100;
+    const conv=ctx.createConvolver();conv.buffer=makeIR(ctx,revType);
+    node.connect(dg);node.connect(conv);conv.connect(wg);dg.connect(dest);wg.connect(dest);
+  }else{node.connect(dest);}
+  sourceNode.start(0,offset||0);isPlaying=true;pbStart=ctx.currentTime-(offset||0);animPH();
+}
+function animPH(){
+  if(!isPlaying||!audioCtx||!curBuf)return;
+  const elapsed=audioCtx.currentTime-pbStart;
+  const pct=Math.min(elapsed/curBuf.duration,1);
+  const ph=document.getElementById('wv-ph');const wa=document.getElementById('wv-area');
+  if(ph&&wa)ph.style.left=(pct*wa.offsetWidth)+'px';
+  // Update timer display
+  const dur=document.getElementById('wv-dur');
+  if(dur)dur.textContent=fmtT(elapsed)+'​/'+fmtT(curBuf.duration);
+  if(pct<1)phAnim=requestAnimationFrame(animPH);
+  else{isPlaying=false;pbOff=0;if(dur)dur.textContent=fmtT(curBuf.duration);}
+}
+let _studioTakeURL=null; // URL of the take currently loaded in studio
+
+function playAudio(){
+  // If we have a decoded buffer, use it (best quality + FX)
+  if(curBuf){
+    const ctx=getCtx();
+    const go=()=>playBufWithFX(curBuf,pbOff||0);
+    ctx.state==='suspended'?ctx.resume().then(go):go();
+    return;
+  }
+  // Fallback: HTML Audio (iOS WebM format)
+  if(_studioTakeURL){
+    playViaMediaElement(_studioTakeURL);
+    return;
+  }
+  toast('Load a take first — tap Studio on a take in Record');
+}
+
+function playViaMediaElement(url){
+  // Fallback: play via HTML Audio through WebAudio for FX chain
+  if(_currentAudio){_currentAudio.pause();_currentAudio=null;}
+  const audio=new Audio(url);
+  audio.volume=1.0;
+  _currentAudio=audio;
+  // Try to connect to AudioContext for FX (may not work on iOS with WebM)
+  try{
+    const ctx=getCtx();
+    const src=ctx.createMediaElementSource(audio);
+    src.connect(ctx.destination);
+  }catch(e){/* play without FX */}
+  audio.play().then(()=>toast('▶ Playing')).catch(e=>{
+    toast('Cannot play in Studio — use Play button in Record');
+  });
+}
+function stopAudio(){if(sourceNode){try{sourceNode.stop();}catch(e){}}sourceNode=null;isPlaying=false;cancelAnimationFrame(phAnim);pbOff=0;const ph=document.getElementById('wv-ph');if(ph)ph.style.left='0';}
+function loadAudio(url,dur){
+  if(!url)return;
+  fetch(url)
+    .then(r=>r.arrayBuffer())
+    .then(ab=>{
+      const ctx=getCtx();
+      const decode=()=>ctx.decodeAudioData(ab.slice(0)).then(buf=>{
+        curBuf=buf;
+        const d=document.getElementById('wv-dur');if(d)d.textContent=fmtT(buf.duration);
+        drawFullWave(buf);renderCutsList();
+        const hint=document.getElementById('ed-hint');if(hint)hint.style.display='none';
+      });
+      if(ctx.state==='suspended') return ctx.resume().then(decode);
+      return decode();
+    })
+    .catch(err=>{
+      console.warn('decodeAudioData failed (iOS WebM):',err);
+      const d=document.getElementById('wv-dur');if(d)d.textContent=fmtT(dur||0);
+      drawDemoWave();
+      // Keep _studioTakeURL set so playViaMediaElement can be used
+      toast('Waveform unavailable on iOS — tap Play to listen');
+    });
+}
+function drawFullWave(buf){
+  const cv=document.getElementById('wv-cv');if(!cv)return;
+  const W=cv.parentElement?.clientWidth||300;cv.width=W;cv.height=90;const H=90;
+  const ctx=cv.getContext('2d');ctx.clearRect(0,0,W,H);
+  const data=buf.getChannelData(0);
+  const bars=Math.floor(W/3);const step=Math.floor(data.length/bars)||1;
+  for(let i=0;i<bars;i++){
+    let mx=0;
+    for(let s=0;s<step;s++){const v=Math.abs(data[i*step+s]||0);if(v>mx)mx=v;}
+    const h=Math.max(3,mx*(H-8)*1.2);
+    const x=i*(W/bars);const y=(H-h)/2;
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(x,y,Math.max(1,(W/bars)-1),h,1);
+    else ctx.rect(x,y,Math.max(1,(W/bars)-1),h);
+    ctx.fill();
+  }
+  drawCutOverlays(W,H,ctx,buf.duration);
+}
+function drawDemoWave(){
+  const cv=document.getElementById('wv-cv');if(!cv)return;
+  const W=cv.parentElement?.clientWidth||300;cv.width=W;cv.height=90;
+  const ctx=cv.getContext('2d');ctx.clearRect(0,0,W,90);const mid=45;
+  ctx.strokeStyle='#34C759';ctx.lineWidth=1;
+  for(let x=0;x<W;x++){const a=(Math.sin(x/7)*.3+Math.random()*.4+.1)*(mid-3);ctx.beginPath();ctx.moveTo(x,mid-a);ctx.lineTo(x,mid+a);ctx.stroke();}
+}
+function drawCutOverlays(W,H,ctx,dur){
+  cuts.forEach(c=>{
+    const x1=c.start/dur*W,x2=c.end/dur*W;
+    ctx.fillStyle='rgba(255,59,48,.2)';ctx.fillRect(x1,0,x2-x1,H);
+    ctx.strokeStyle='var(--accent)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(x1,0);ctx.lineTo(x1,H);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x2,0);ctx.lineTo(x2,H);ctx.stroke();ctx.setLineDash([]);
+  });
+}
+function startSel(e){if(!curBuf)return;dragging=true;const r=e.currentTarget.getBoundingClientRect();selStart=(e.clientX-r.left)/r.width;selEnd=selStart;updSel(r.width);}
+function moveSel(e){if(!dragging||!curBuf)return;const r=e.currentTarget.getBoundingClientRect();selEnd=Math.max(0,Math.min((e.clientX-r.left)/r.width,1));updSel(r.width);}
+function endSel(e){
+  dragging=false;
+  if(Math.abs(selEnd-selStart)<.01){selStart=-1;selEnd=-1;hideSel();return;}
+  const s=Math.min(selStart,selEnd),en=Math.max(selStart,selEnd);
+  selStart=s;selEnd=en;
+  const btn=document.getElementById('cut-btn');
+  if(btn){btn.disabled=false;btn.style.opacity='1';}
+  const sl=document.getElementById('sel-lbl');
+  if(sl&&curBuf)sl.textContent='Sel '+fmtT(s*curBuf.duration)+' → '+fmtT(en*curBuf.duration);
+}
+function startSelT(e){e.preventDefault();const t=e.touches[0];startSel({currentTarget:e.currentTarget,clientX:t.clientX});}
+function moveSelT(e){e.preventDefault();const t=e.touches[0];moveSel({currentTarget:e.currentTarget,clientX:t.clientX});}
+function endSelT(e){endSel(e);}
+function hideSel(){const s=document.getElementById('wv-sel');if(s)s.style.display='none';document.getElementById('cut-btn').disabled=true;const sl=document.getElementById('sel-lbl');if(sl)sl.textContent='';}
+function updSel(W){const s=document.getElementById('wv-sel');if(!s)return;const mn=Math.min(selStart,selEnd),mx=Math.max(selStart,selEnd);s.style.display='block';s.style.left=mn*W+'px';s.style.width=(mx-mn)*W+'px';}
+function cutSel(){
+  if(selStart<0||!curBuf)return;const dur=curBuf.duration;
+  cuts.push({start:Math.min(selStart,selEnd)*dur,end:Math.max(selStart,selEnd)*dur});cuts.sort((a,b)=>a.start-b.start);
+  selStart=-1;selEnd=-1;hideSel();applyCuts();renderCutsList();
+}
+function undoCut(i){cuts.splice(i,1);applyCuts();renderCutsList();}
+function applyCuts(){
+  if(!curBuf)return;const sr=curBuf.sampleRate,orig=curBuf.getChannelData(0),dur=curBuf.duration;
+  let keep=[[0,dur]];cuts.forEach(c=>{keep=keep.flatMap(r=>{if(c.end<=r[0]||c.start>=r[1])return[r];const res=[];if(c.start>r[0])res.push([r[0],c.start]);if(c.end<r[1])res.push([c.end,r[1]]);return res;});});
+  const total=keep.reduce((s,r)=>s+Math.round((r[1]-r[0])*sr),0);
+  const ctx=new AudioContext();const nb=ctx.createBuffer(1,total,sr);const nd=nb.getChannelData(0);
+  let off=0;keep.forEach(r=>{const s=Math.round(r[0]*sr),e=Math.round(r[1]*sr);for(let i=s;i<e&&off<total;i++,off++)nd[off]=orig[i]||0;});
+  curBuf=nb;audioCtx=ctx;const d=document.getElementById('wv-dur');if(d)d.textContent=fmtT(nb.duration);drawFullWave(nb);
+}
+function renderCutsList(){
+  const sec=document.getElementById('cuts-sec');if(!sec)return;
+  sec.style.display=cuts.length?'flex':'none';
+  sec.innerHTML=cuts.map((c,i)=>`<div style="display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 8px;background:var(--bg3);border-radius:8px;color:var(--t2)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="3" cy="3" r="1.5" stroke="currentColor" stroke-width="1.2"/><circle cx="3" cy="9" r="1.5" stroke="currentColor" stroke-width="1.2"/><line x1="4.5" y1="4" x2="11" y2="9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="4.5" y1="8" x2="11" y2="3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> ${fmtT(c.start)} → ${fmtT(c.end)}<button onclick="undoCut(${i})" style="margin-left:auto;font-size:11px;padding:2px 6px;border-radius:6px;background:transparent;border:1px solid var(--accent);color:var(--accent)">Undo</button></div>`).join('');
+}
+function exportWAV(mode='raw'){
+  const m=document.getElementById('export-menu');if(m)m.style.display='none';
+  if(!curBuf){toast('No take loaded');return;}
+  // For raw: just export buffer directly
+  if(mode==='raw'){_doExportWAV(curBuf);return;}
+  // For processed: render offline
+  const sr=curBuf.sampleRate;
+  const len=curBuf.length;
+  const offCtx=new OfflineAudioContext(1,len+(mode.includes('reverb')||mode==='all'?sr*3:0),sr);
+  const src=offCtx.createBufferSource();src.buffer=curBuf;
+  let node=src;
+  if((mode==='comp'||mode==='all')&&compOn){const cs=getCompSettings();const compNode=offCtx.createDynamicsCompressor();compNode.threshold.value=cs.threshold;compNode.ratio.value=cs.ratio;compNode.attack.value=cs.attack;compNode.release.value=cs.release;compNode.knee.value=cs.knee;const mkup=offCtx.createGain();mkup.gain.value=Math.pow(10,cs.gain/20);node.connect(compNode);compNode.connect(mkup);node=mkup;}
+  if((mode==='eq'||mode==='all')&&eqOn&&gains.some(g=>g!==0)){
+    const filters=EQ_BANDS.map((b,i)=>{
+      const f=offCtx.createBiquadFilter();
+      f.type=i===0?'lowshelf':i===7?'highshelf':'peaking';
+      f.frequency.value=b.freq;f.gain.value=gains[i];f.Q.value=1.2;return f;
+    });
+    filters.reduce((a,b)=>{a.connect(b);return b;},node);node=filters[filters.length-1];
+  }
+  if((mode==='reverb'||mode==='all')&&revOn){
+    const _wetEx=+(document.getElementById('dw-knob')?.value||30)/100;
+    const dg=offCtx.createGain();dg.gain.value=1-_wetEx;
+    const wg=offCtx.createGain();wg.gain.value=_wetEx;
+    const conv=offCtx.createConvolver();conv.buffer=makeIR(offCtx,revType);
+    node.connect(dg);node.connect(conv);conv.connect(wg);
+    dg.connect(offCtx.destination);wg.connect(offCtx.destination);
+    src.start(0);
+    offCtx.startRendering().then(rendered=>_doExportWAV(rendered));return;
+  }
+  node.connect(offCtx.destination);src.start(0);
+  offCtx.startRendering().then(rendered=>_doExportWAV(rendered));return;
+  if(false){/*fallthrough*/}
+}
+function _doExportWAV(audioBuf){
+  if(!audioBuf){toast('No take loaded');return;}
+  const sr=audioBuf.sampleRate;
+  const data=audioBuf.getChannelData(0);
+  const len=data.length;
+  const ab=new ArrayBuffer(44+len*2);
+  const dv=new DataView(ab);
+  const wr=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
+  wr(0,'RIFF');dv.setUint32(4,36+len*2,true);
+  wr(8,'WAVE');wr(12,'fmt ');
+  dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);
+  dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);
+  dv.setUint16(32,2,true);dv.setUint16(34,16,true);
+  wr(36,'data');dv.setUint32(40,len*2,true);
+  let o=44;
+  for(let i=0;i<len;i++){
+    const sv=Math.max(-1,Math.min(1,data[i]));
+    dv.setInt16(o,sv<0?sv*0x8000:sv*0x7FFF,true);o+=2;
+  }
+  const blob=new Blob([ab],{type:'audio/wav'});
+  const a=document.createElement('a');
+  const rec=DB.find(d=>d.id===CID);
+  a.href=URL.createObjectURL(blob);
+  a.download=(rec?.titre||'export').replace(/[^a-z0-9]/gi,'_')+'.wav';
+  a.click();
+  toast('.wav exported!');
+}
+
+// ══════════════════════════════════════
+// METRONOME
+// ══════════════════════════════════════
+// Sig handled by picker
+const TEMPO_MAP=[{m:39,n:'Grave'},{m:59,n:'Largo'},{m:65,n:'Larghetto'},{m:75,n:'Adagio'},{m:107,n:'Andante'},{m:119,n:'Moderato'},{m:155,n:'Allegro'},{m:175,n:'Vivace'},{m:199,n:'Presto'},{m:999,n:'Prestissimo'}];
+let bpm=120,sig='4/4',metroOn=false,beat=0,metroTimer=null,pendDir=1;
+function buildSigRow(){
+  // Update the display button
+  const btn=document.getElementById('sig-display');
+  if(btn)btn.textContent=sig;
+}
+
+let sigBeats=4,sigDiv=4;
+
+function toggleSigPicker(){
+  const p=document.getElementById('sig-picker');
+  if(!p)return;
+  if(p.style.display==='none'){
+    // Sync inputs with current values
+    const ib=document.getElementById('input-beats');
+    const id=document.getElementById('input-div');
+    if(ib)ib.value=sigBeats;
+    if(id)id.value=sigDiv;
+    p.style.display='block';
+  } else p.style.display='none';
+}
+
+function setSigBeats(n){
+  sigBeats=n;
+  document.querySelectorAll('[id^="sb-"]').forEach(b=>{
+    const v=parseInt(b.id.replace('sb-',''));
+    b.style.background=v===n?'var(--accent)':'var(--bg3)';
+    b.style.color=v===n?'#fff':'var(--t2)';
+  });
+  sig=sigBeats+'/'+sigDiv;
+  buildSigRow();buildBeatLeds();
+  if(metroOn){stopMetro();startMetro();}
+}
+
+function setSigDiv(n){
+  sigDiv=n;
+  document.querySelectorAll('[id^="sd-"]').forEach(b=>{
+    const v=parseInt(b.id.replace('sd-',''));
+    b.style.background=v===n?'var(--accent)':'var(--bg3)';
+    b.style.color=v===n?'#fff':'var(--t2)';
+  });
+  sig=sigBeats+'/'+sigDiv;
+  buildSigRow();
+}
+function buildBeatLeds(){
+  const w=document.getElementById('beat-leds');if(!w)return;
+  const n=parseInt(sig.split('/')[0]);
+  w.innerHTML=Array.from({length:n},(_,i)=>`<div class="bled ${i===0?'acc':''}" id="bl${i}"></div>`).join('');
+}
+// setSig replaced by setSigBeats/setSigDiv
+function setBPM(v){
+  bpm=Math.max(20,Math.min(300,v));
+  const sl=document.getElementById('bpm-range');if(sl)sl.value=bpm;
+  const vl=document.getElementById('bpm-val');if(vl)vl.textContent=bpm;
+  const tn=TEMPO_MAP.find(t=>bpm<=t.m);const sub=document.getElementById('bpm-sub');
+  if(sub)sub.textContent='BPM · '+(tn?tn.n:'')+' · '+sig;
+  if(metroOn){stopMetro();startMetro();}
+}
+function adjBPM(d){setBPM(bpm+d);}
+function tick(){
+  const n=parseInt(sig.split('/')[0]);const isAccent=beat===0;
+  const ctx=getCtx();
+  // iOS requires AudioContext resume after user gesture
+  if(ctx.state==='suspended')ctx.resume();
+  const osc=ctx.createOscillator();const g=ctx.createGain();
+  osc.connect(g);g.connect(ctx.destination);osc.frequency.value=isAccent?1100:880;
+  g.gain.setValueAtTime(isAccent?.9:.45,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.08);osc.start();osc.stop(ctx.currentTime+.08);
+  pendDir=-pendDir;const angle=pendDir*26;const pivX=40,pivY=88,len=70;
+  const rad=angle*Math.PI/180;const bx=pivX+Math.sin(rad)*len;const by=pivY-Math.cos(rad)*len;
+  const line=document.getElementById('pend-line');const bob=document.getElementById('pend-bob');
+  if(line){line.setAttribute('x2',bx.toFixed(1));line.setAttribute('y2',by.toFixed(1));}
+  if(bob){bob.setAttribute('cx',bx.toFixed(1));bob.setAttribute('cy',by.toFixed(1));}
+  const tickDot=document.getElementById('pend-tick');if(tickDot){tickDot.setAttribute('opacity','1');setTimeout(()=>tickDot.setAttribute('opacity','0'),70);}
+  for(let i=0;i<n;i++){const d=document.getElementById('bl'+i);if(d)d.classList.toggle('on',i===beat);}
+  beat=(beat+1)%n;
+}
+function startMetro(){beat=0;tick();metroTimer=setInterval(tick,60000/bpm);}
+function stopMetro(){
+  clearInterval(metroTimer);metroTimer=null;beat=0;
+  const line=document.getElementById('pend-line');const bob=document.getElementById('pend-bob');
+  if(line){line.setAttribute('x2','40');line.setAttribute('y2','18');}if(bob){bob.setAttribute('cx','40');bob.setAttribute('cy','18');}
+  const n=parseInt(sig.split('/')[0]);for(let i=0;i<n;i++){const d=document.getElementById('bl'+i);if(d)d.classList.remove('on');}
+}
+function toggleMetro(){
+  // Ensure AudioContext is created/resumed on user gesture (iOS requirement)
+  const ctx=getCtx();if(ctx.state==='suspended')ctx.resume();
+  metroOn=!metroOn;const pc=document.getElementById('play-circ');const mi=document.getElementById('metro-icon');
+  if(metroOn){pc.classList.add('playing');mi.innerHTML='<rect x="5" y="5" width="20" height="20" rx="3" fill="white"/>';startMetro();}
+  else{pc.classList.remove('playing');mi.innerHTML='<polygon points="7,3 27,15 7,27" fill="white"/>';stopMetro();}
+}
+
+// ══════════════════════════════════════
+// TUNER
+// ══════════════════════════════════════
+const STR_STD=[{note:'E2',freq:82.41,lbl:'6',name:'Low E'},{note:'A2',freq:110,lbl:'5',name:'A'},{note:'D3',freq:146.83,lbl:'4',name:'D'},{note:'G3',freq:196,lbl:'3',name:'G'},{note:'B3',freq:246.94,lbl:'2',name:'B'},{note:'E4',freq:329.63,lbl:'1',name:'High E'}];
+let tunerStrings=STR_STD.map(s=>({...s}));
+const NOTE_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+let micOn=false,refOn=false,refFreq=440,micStream=null,micActx=null,micAnalyser=null,tunerAnimId=null,selectedStr=null,refOsc=null,refGainNode=null;
+function buildStrPills(){
+  const w=document.getElementById('str-pills');if(!w)return;
+  w.innerHTML=tunerStrings.map((s,i)=>`<button class="tstr ${selectedStr===i?'on':''}" onclick="selectStr(${i})">${s.note}<span>S${s.lbl} ${s.name}</span></button>`).join('');
+}
+function selectStr(i){selectedStr=i;buildStrPills();if(refOn)playRef(tunerStrings[i].freq);}
+function f2note(freq){
+  if(!freq||freq<20)return{note:'—',cents:0};
+  const semi=12*Math.log2(freq/refFreq),midi=Math.round(semi)+69;
+  return{note:NOTE_NAMES[((midi%12)+12)%12],cents:Math.round((semi+69-midi)*100),octave:Math.floor(midi/12)-1};
+}
+function updNeedle(cents){const n=document.getElementById('gneedle');if(!n)return;n.style.transform=`translateX(-50%) rotate(${Math.max(-55,Math.min(55,cents*.85))}deg)`;}
+async function toggleMic(){
+  if(!micOn){
+    try{
+      micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+      micActx=new AudioContext();micAnalyser=micActx.createAnalyser();micAnalyser.fftSize=4096;
+      micActx.createMediaStreamSource(micStream).connect(micAnalyser);micOn=true;
+      const btn=document.getElementById('mic-btn');if(btn){btn.classList.add('active');document.getElementById('mic-lbl').textContent='On';}
+      document.getElementById('tuner-status').textContent='Listening…';tunerLoop();
+    }catch(e){document.getElementById('tuner-status').textContent='Mic access denied — HTTPS required';}
+  }else{
+    micOn=false;cancelAnimationFrame(tunerAnimId);micStream?.getTracks().forEach(t=>t.stop());
+    const btn=document.getElementById('mic-btn');if(btn){btn.classList.remove('active');document.getElementById('mic-lbl').textContent='Off';}
+    document.getElementById('tuner-status').textContent='Microphone off';
+    document.getElementById('note-big').textContent='—';document.getElementById('cents-disp').textContent='— ¢';updNeedle(0);
+  }
+}
+function detectPitch(a,sr){
+  const buf=new Float32Array(a.fftSize);a.getFloatTimeDomainData(buf);
+  let rms=0;for(let i=0;i<buf.length;i++)rms+=buf[i]*buf[i];if(Math.sqrt(rms/buf.length)<0.01)return null;
+  let best=-1,bestT=-1;for(let t=32;t<buf.length/2;t++){let r=0;for(let i=0;i<buf.length/2;i++)r+=buf[i]*buf[i+t];if(r>best){best=r;bestT=t;}}
+  return bestT>0?sr/bestT:null;
+}
+function tunerLoop(){
+  if(!micOn)return;tunerAnimId=requestAnimationFrame(tunerLoop);
+  const freq=detectPitch(micAnalyser,micActx.sampleRate);if(!freq)return;
+  const{note,cents,octave}=f2note(freq);
+  const nd=document.getElementById('note-big');const cd=document.getElementById('cents-disp');const st=document.getElementById('tuner-status');
+  if(nd)nd.textContent=note+(octave!==undefined?octave:'');
+  if(cd){cd.textContent=(cents>0?'+':'')+cents+' ¢';cd.className='cents'+(Math.abs(cents)<=5?' it':'');}
+  // Compare to target note if a string is selected
+  if(selectedStr !== null){
+    const target = tunerTargetTuning[selectedStr];
+    if(target){
+      const targetMidi = Math.round(12*Math.log2(target.freq/440)+69);
+      const detectedMidi = Math.round(12*Math.log2(freq/440)+69);
+      const diffCents = Math.round((12*Math.log2(freq/target.freq))*100);
+      if(st)st.textContent=Math.abs(diffCents)<=5?'✓ In tune':(diffCents>0?'♯ Too high — loosen':'♭ Too low — tighten');
+      if(cd){cd.textContent=(diffCents>0?'+':'')+diffCents+' ¢';cd.className='cents'+(Math.abs(diffCents)<=5?' it':'');}
+      updNeedle(diffCents);return;
+    }
+  }
+  if(st)st.textContent=Math.abs(cents)<=5?'In tune':(cents>0?'Too low — tune up':'Too high — tune down');
+  updNeedle(cents);
+}
+function toggleRef(){refOn=!refOn;const t=document.getElementById('ref-tog');if(t)t.classList.toggle('on',refOn);if(refOn)playRef(selectedStr!=null?tunerStrings[selectedStr].freq:refFreq);else stopRef();}
+function playRef(freq){const ctx=getCtx();stopRef();refOsc=ctx.createOscillator();refGainNode=ctx.createGain();refOsc.connect(refGainNode);refGainNode.connect(ctx.destination);refOsc.type='sine';refOsc.frequency.value=freq;refGainNode.gain.setValueAtTime(0,ctx.currentTime);refGainNode.gain.linearRampToValueAtTime(.2,ctx.currentTime+.05);refOsc.start();}
+function stopRef(){if(refOsc){try{const ctx=getCtx();refGainNode?.gain.linearRampToValueAtTime(0,ctx.currentTime+.05);setTimeout(()=>{try{refOsc.stop();}catch(e){}},80);}catch(e){}}refOsc=null;refGainNode=null;}
+
+// ══════════════════════════════════════
+// TUNINGS
+// ══════════════════════════════════════
+const TUNINGS_DB=[
+  {cat:'Standard',items:[
+    {name:'Standard',notes:'E A D G B e',desc:'Classic — virtually all genres'},
+    {name:'Half Step Down',notes:'Eb Ab Db Gb Bb eb',desc:'Jimi Hendrix, Guns N\'Roses, Nirvana'},
+    {name:'Full Step Down',notes:'D G C F A d',desc:'Alice in Chains, Soundgarden'},
+    {name:'3 Half Steps Down',notes:'C# F# B E G# c#',desc:'Doom / stoner metal'},
+  ]},
+  {cat:'Drop',items:[
+    {name:'Drop D',notes:'D A D G B e',desc:'Foo Fighters, RATM, Muse — power chords, 1 finger'},
+    {name:'Drop C',notes:'C G C F A d',desc:'System of a Down, Bullet for My Valentine'},
+    {name:'Drop B',notes:'B F# B E G# c#',desc:'Slipknot, Avenged Sevenfold'},
+    {name:'Drop A',notes:'A E A D F# b',desc:'Djent — Periphery, Meshuggah'},
+    {name:'Double Drop D',notes:'D A D G B d',desc:'Neil Young, Led Zeppelin (The Rain Song)'},
+  ]},
+  {cat:'Open',items:[
+    {name:'Open G',notes:'D G D G B d',desc:'Rolling Stones (Keith Richards), Robert Johnson — slide blues'},
+    {name:'Open D',notes:'D A D F# A d',desc:'Bob Dylan, Joni Mitchell — slide & fingerstyle'},
+    {name:'Open E',notes:'E B E G# B e',desc:'Duane Allman, Derek Trucks — blues slide'},
+    {name:'Open A',notes:'E A E A C# e',desc:'Junior Kimbrough, Mississippi blues'},
+    {name:'Open C',notes:'C G C G C e',desc:'Chris Cornell, Led Zeppelin (Friends)'},
+    {name:'Open Dm',notes:'D A D F A d',desc:'Nick Drake — Pink Moon, melancholic fingerstyle'},
+    {name:'Open Em',notes:'E B E G B e',desc:'Nick Drake, Elliott Smith — ambient / drone'},
+  ]},
+  {cat:'Modal & Alternate',items:[
+    {name:'DADGAD',notes:'D A D G A d',desc:'Jimmy Page (Kashmir), Pierre Bensusan, Celtic folk'},
+    {name:'Gsus2',notes:'D G D G A d',desc:'Celtic folk variant of DADGAD'},
+    {name:'All Fourths',notes:'E A D G C F',desc:'Jazz / experimental — uniform intervals'},
+    {name:'Lute Tuning',notes:'E A D F# B e',desc:'Baroque & Renaissance — G lowered to F#'},
+    {name:'NST (New Standard)',notes:'C G D A E G',desc:'Robert Fripp (King Crimson) — wide range'},
+  ]},
+  {cat:'Nashville & Specific',items:[
+    {name:'High Strung',notes:'E A D G B e',desc:'Standard + octave strings — country jangle'},
+    {name:'Baritone',notes:'B E A D F# b',desc:'Lower tension — John Lennon, surf rock'},
+  ]},
+  {cat:'Bass',items:[
+    {name:'Bass Standard 4',notes:'E A D G',desc:'Standard 4-string bass'},
+    {name:'Bass Standard 5',notes:'B E A D G',desc:'5-string with low B'},
+    {name:'Bass Drop D',notes:'D A D G',desc:'Heavy riffs — one-finger power bass'},
+    {name:'Bass Drop A',notes:'A E A D',desc:'Extended range metal bass'},
+  ]},
+];
+const FREQ_MAP={'E2':82.41,'A2':110,'D3':146.83,'G3':196,'B3':246.94,'E4':329.63,'Eb2':77.78,'Ab2':103.83,'Db3':138.59,'Gb3':184.99,'Bb3':233.08,'Eb4':311.13,'D2':73.42,'G2':98,'C3':130.81,'F3':174.61,'A3':220,'C4':261.63,'F#3':185,'D4':293.66,'F#4':369.99,'C#3':138.59,'G#3':207.65,'F#2':92.5,'B2':123.47,'C#2':69.3};
+let selectedTuning='Standard';
+function renderTunings(){
+  const q=(document.getElementById('tuning-search')||{}).value?.toLowerCase()||'';
+  const selBox=document.getElementById('sel-tuning-box');
+  const found=TUNINGS_DB.flatMap(c=>c.items).find(t=>t.name===selectedTuning);
+  if(found&&selBox){
+    selBox.style.display='block';
+    document.getElementById('sel-tuning-name').textContent=found.name+' — '+found.desc;
+    const notes=found.notes.split(' ');
+    document.getElementById('sel-tuning-visual').innerHTML=notes.map((n,i)=>`<div class="tv-s"><div class="tv-n">${n}</div><div class="tv-l">${6-i}</div></div>`).join('');
+  }else if(selBox)selBox.style.display='none';
+  const cats=q?[{cat:'Results',items:TUNINGS_DB.flatMap(c=>c.items).filter(t=>t.name.toLowerCase().includes(q)||t.notes.toLowerCase().includes(q)||t.desc.toLowerCase().includes(q))}]:TUNINGS_DB;
+  document.getElementById('tunings-list').innerHTML=cats.map(cat=>`
+    <div class="cat-hd">${cat.cat}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">${cat.items.map(t=>`
+      <div class="tuning-card ${t.name===selectedTuning?'on':''}" onclick="selectTuning('${t.name}')">
+        <div class="tc-name">${t.name}</div>
+        <div class="tc-notes">${t.notes}</div>
+        <div class="tc-desc">${t.desc}</div>
+      </div>`).join('')}</div>`).join('');
+}
+function selectTuning(name){selectedTuning=name;renderTunings();}
+function loadTuningInTuner(){
+  const found=TUNINGS_DB.flatMap(c=>c.items).find(t=>t.name===selectedTuning);
+  if(!found){toast('Select a tuning first');return;}
+  // Apply tuning to tunerStrings and target
+  tunerApplyTuning(found.notes);
+  const notes=found.notes.split(' ');
+  notes.forEach((n,i)=>{
+    if(tunerStrings[i]){
+      tunerStrings[i].note=n;
+      const midi=NOTE_TO_MIDI[n]||NOTE_TO_MIDI[n.replace('b','#')]||69;
+      tunerStrings[i].freq=440*Math.pow(2,(midi-69)/12);
+    }
+  });
+  // Sync tuner dropdown
+  const sel=document.getElementById('tuner-tuning-sel');
+  if(sel)sel.value=found.notes;
+  // Navigate to Tools → Tuner
+  showPanel('tools');
+  setTimeout(()=>{
+    showSub('tuner');
+    tunerBuildStringGrid();
+    tunerUpdateTargetNote();
+    toast('"'+found.name+'" loaded');
+  },100);
+}
+
+// ══════════════════════════════════════
+// CHORDS
+// ══════════════════════════════════════
+const CHORD_DATA={
+  'E':[{s:6,f:0},{s:5,f:2},{s:4,f:2},{s:3,f:1},{s:2,f:0},{s:1,f:0}],
+  'Em':[{s:6,f:0},{s:5,f:2},{s:4,f:2},{s:3,f:0},{s:2,f:0},{s:1,f:0}],
+  'E7':[{s:6,f:0},{s:5,f:2},{s:4,f:0},{s:3,f:1},{s:2,f:0},{s:1,f:0}],
+  'A':[{s:6,f:'x'},{s:5,f:0},{s:4,f:2},{s:3,f:2},{s:2,f:2},{s:1,f:0}],
+  'Am':[{s:6,f:'x'},{s:5,f:0},{s:4,f:2},{s:3,f:2},{s:2,f:1},{s:1,f:0}],
+  'A7':[{s:6,f:'x'},{s:5,f:0},{s:4,f:2},{s:3,f:0},{s:2,f:2},{s:1,f:0}],
+  'D':[{s:6,f:'x'},{s:5,f:'x'},{s:4,f:0},{s:3,f:2},{s:2,f:3},{s:1,f:2}],
+  'Dm':[{s:6,f:'x'},{s:5,f:'x'},{s:4,f:0},{s:3,f:2},{s:2,f:3},{s:1,f:1}],
+  'D7':[{s:6,f:'x'},{s:5,f:'x'},{s:4,f:0},{s:3,f:2},{s:2,f:1},{s:1,f:2}],
+  'G':[{s:6,f:3},{s:5,f:2},{s:4,f:0},{s:3,f:0},{s:2,f:0},{s:1,f:3}],
+  'G7':[{s:6,f:3},{s:5,f:2},{s:4,f:0},{s:3,f:0},{s:2,f:0},{s:1,f:1}],
+  'C':[{s:6,f:'x'},{s:5,f:3},{s:4,f:2},{s:3,f:0},{s:2,f:1},{s:1,f:0}],
+  'C7':[{s:6,f:'x'},{s:5,f:3},{s:4,f:2},{s:3,f:3},{s:2,f:1},{s:1,f:0}],
+  'F':[{s:6,f:1},{s:5,f:1},{s:4,f:2},{s:3,f:3},{s:2,f:3},{s:1,f:1}],
+  'B':[{s:6,f:'x'},{s:5,f:2},{s:4,f:4},{s:3,f:4},{s:2,f:4},{s:1,f:2}],
+  'Bm':[{s:6,f:'x'},{s:5,f:2},{s:4,f:4},{s:3,f:4},{s:2,f:3},{s:1,f:2}],
+  'Cadd9':[{s:6,f:'x'},{s:5,f:3},{s:4,f:2},{s:3,f:0},{s:2,f:3},{s:1,f:0}],
+  'Dsus2':[{s:6,f:'x'},{s:5,f:'x'},{s:4,f:0},{s:3,f:2},{s:2,f:3},{s:1,f:0}],
+  'Asus2':[{s:6,f:'x'},{s:5,f:0},{s:4,f:2},{s:3,f:2},{s:2,f:0},{s:1,f:0}],
+  'Gsus4':[{s:6,f:3},{s:5,f:3},{s:4,f:0},{s:3,f:0},{s:2,f:1},{s:1,f:3}],
+};
+let selectedChords=[];
+function buildChordLib(){
+  const w=document.getElementById('chord-lib');if(!w)return;
+  w.innerHTML=Object.keys(CHORD_DATA).map(n=>`<button class="pill ${selectedChords.includes(n)?'on':''}" data-chord="${n}" onclick="toggleChord('${n}')">${n}</button>`).join('');
+  renderChordDisplay();
+}
+function toggleChord(name){
+  if(selectedChords.includes(name))selectedChords=selectedChords.filter(c=>c!==name);
+  else selectedChords.push(name);
+  document.querySelectorAll('#chord-lib [data-chord]').forEach(b=>b.classList.toggle('on',selectedChords.includes(b.dataset.chord)));
+  renderChordDisplay();
+  const r=DB.find(d=>d.id===CID);if(r){r.chords=selectedChords.slice();save();}
+}
+function addManualChord(){
+  const inp=document.getElementById('chord-manual');if(!inp)return;const name=inp.value.trim();if(!name)return;
+  if(!selectedChords.includes(name))selectedChords.push(name);inp.value='';renderChordDisplay();
+}
+function renderChordDisplay(){
+  const w=document.getElementById('chord-display');if(!w)return;
+  if(!selectedChords.length){w.innerHTML='<div style="font-size:13px;color:var(--t3)">No chords selected yet</div>';return;}
+  w.innerHTML=selectedChords.map((name,i)=>`
+    <div class="chord-card">
+      <div class="chord-name">${name}</div>
+      <canvas id="cd${i}" width="62" height="70"></canvas>
+      <button class="pill" onclick="selectedChords.splice(${i},1);renderChordDisplay()" style="font-size:11px;padding:2px 7px">×</button>
+    </div>`).join('');
+  selectedChords.forEach((name,i)=>{const cv=document.getElementById('cd'+i);if(cv)drawChord(cv,CHORD_DATA[name]||null);});
+}
+function drawChord(cv,pos){
+  const ctx=cv.getContext('2d');const W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
+  const dark=currentSkin==='console';const fg=dark?'rgba(255,255,255,.8)':'rgba(0,0,0,.8)';
+  const strings=6,frets=4,pL=10,pT=14,pR=6,pB=6;
+  const fw=(W-pL-pR)/(strings-1),fh=(H-pT-pB)/frets;
+  ctx.strokeStyle=fg;ctx.lineWidth=0.7;
+  for(let s=0;s<strings;s++){ctx.beginPath();ctx.moveTo(pL+s*fw,pT);ctx.lineTo(pL+s*fw,pT+frets*fh);ctx.stroke();}
+  for(let f=0;f<=frets;f++){ctx.beginPath();ctx.moveTo(pL,pT+f*fh);ctx.lineTo(pL+(strings-1)*fw,pT+f*fh);ctx.stroke();}
+  if(!pos)return;
+  pos.forEach(p=>{
+    const sx=pL+(6-p.s)*fw;
+    if(p.f==='x'){ctx.fillStyle='var(--accent)';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText('×',sx,pT-3);}
+    else if(p.f===0){ctx.strokeStyle='var(--green)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx,pT-5,4,0,Math.PI*2);ctx.stroke();}
+    else{
+      // White dot with colored border
+      ctx.fillStyle='#ffffff';
+      ctx.beginPath();ctx.arc(sx,pT+(p.f-.5)*fh,fh*.34,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=dark?'var(--accent)':'var(--blue)';
+      ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(sx,pT+(p.f-.5)*fh,fh*.34,0,Math.PI*2);ctx.stroke();
+    }
+  });
+}
+
+// ══════════════════════════════════════
+// SUB TABS (Tools)
+// ══════════════════════════════════════
+function showSub(id){
+  ['click','tuner','tunings','chords'].forEach(s=>{
+    const p=document.getElementById('sub-'+s);const b=document.getElementById('st-'+s);
+    if(p)p.style.display=s===id?'flex':'none';
+    if(b)b.classList.toggle('on',s===id);
+  });
+  // Set flex-direction
+  const p=document.getElementById('sub-'+id);if(p)p.style.flexDirection='column';
+  if(id==='click'){p.style.display='flex';}
+  if(id==='tuner'){tunerBuildTuningSelect();tunerBuildStringGrid();tunerUpdateTargetNote();}
+  if(id==='tunings')renderTunings();
+  if(id==='chords')setTimeout(()=>{cfBuildStringControls();cfDrawFretboard();},80);
+  if(id==='chords'){const r=CID?DB.find(d=>d.id===CID):null;if(r&&r.chords)selectedChords=r.chords.slice();buildChordLib();setTimeout(cfInit,80);}
+}
+function initTools(){
+  buildSigRow();buildBeatLeds();setBPM(bpm);
+  showSub('click');
+}
+
+// ══════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+
+
+// ══════════════════════════════════════
+// CHORD FINDER — TUNING & CAPO
+// ══════════════════════════════════════
+
+// Current tuning as MIDI note numbers (strings 6→1), default Standard
+let cf_tuning = [40, 45, 50, 55, 59, 64]; // E2 A2 D3 G3 B3 E4
+let cf_capo = 0;
+let cf_tuning_name = 'Standard';
+
+// Full note→MIDI map
+const NOTE_TO_MIDI = {
+  'C2':36,'C#2':37,'Db2':37,'D2':38,'D#2':39,'Eb2':39,'E2':40,'F2':41,'F#2':42,'Gb2':42,'G2':43,'G#2':44,'Ab2':44,'A2':45,'A#2':46,'Bb2':46,'B2':47,
+  'C3':48,'C#3':49,'Db3':49,'D3':50,'D#3':51,'Eb3':51,'E3':52,'F3':53,'F#3':54,'Gb3':54,'G3':55,'G#3':56,'Ab3':56,'A3':57,'A#3':58,'Bb3':58,'B3':59,
+  'C4':60,'C#4':61,'Db4':61,'D4':62,'D#4':63,'Eb4':63,'E4':64,'F4':65,'F#4':66,'Gb4':66,'G4':67,'G#4':68,'Ab4':68,'A4':69,'A#4':70,'Bb4':70,'B4':71,
+  'e':64,'b':59,'g':55,'d':50,'a':45,'E':40,
+};
+
+// Map tunings DB strings notation to MIDI
+function cfTuningToMidi(notesStr) {
+  return notesStr.split(' ').map(n => {
+    // Handle lowercase shorthand
+    const map = {'e':64,'b':59,'g':55,'d':50,'a':45,'E':40,
+                 'eb':63,'ab':56,'db':49,'gb':54,'bb':58,
+                 'Eb':63,'Ab':56,'Db':49,'Gb':54,'Bb':58,
+                 'c#':61,'f#':54,'g#':56,'a#':58,'c':60,'f':53,
+                 'C#':61,'F#':54,'G#':56,'A#':58};
+    if(map[n]!==undefined) return map[n];
+    if(NOTE_TO_MIDI[n]!==undefined) return NOTE_TO_MIDI[n];
+    // Try to parse note+octave
+    const m=n.match(/^([A-Ga-g][#b]?)(\d)$/);
+    if(m){const k=NOTE_TO_MIDI[m[1].toUpperCase()+m[2]];if(k)return k;}
+    return 40; // fallback
+  });
+}
+
+function cfBuildTuningSelect() {
+  const sel = document.getElementById('cf-tuning-sel');
+  if (!sel) return;
+  sel.innerHTML = TUNINGS_DB.flatMap(cat =>
+    cat.items.map(t => `<option value="${t.notes}" ${t.name===cf_tuning_name?'selected':''}>${t.name} — ${t.notes}</option>`)
+  ).join('');
+}
+
+function cfApplyTuning(notesStr) {
+  cf_tuning = cfTuningToMidi(notesStr);
+  // Find name
+  const found = TUNINGS_DB.flatMap(c=>c.items).find(t=>t.notes===notesStr);
+  cf_tuning_name = found ? found.name : 'Custom';
+  // Update CF_OPEN_NOTES reference used in drawing
+  for(let i=0;i<6;i++) CF_OPEN_NOTES[i] = cf_tuning[i];
+  cfReset();
+  cfBuildCustomGrid();
+}
+
+function cfOpenCustomStrings() {
+  const panel = document.getElementById('cf-custom-strings');
+  if (!panel) return;
+  if (panel.style.display !== 'none') {
+    // Closing — stop any active mic
+    cfStopListenStr();
+    panel.style.display = 'none';
+  } else {
+    panel.style.display = 'block';
+    cfBuildCustomGrid();
+  }
+}
+
+// Mic detection state for custom tuning
+let cf_mic_stream = null, cf_mic_actx = null, cf_mic_analyser = null;
+let cf_listening_str = -1, cf_listen_anim = null;
+
+function cfBuildCustomGrid() {
+  const w = document.getElementById('cf-custom-grid');
+  if (!w) return;
+  w.style.gridTemplateColumns = 'repeat(3,1fr)';
+  w.style.gap = '6px';
+  w.style.width = '100%';
+  const strLabels = ['6','5','4','3','2','1'];
+  const strNames  = ['E','A','D','G','B','e'];
+  // String thickness (px) from low to high
+  const strThick  = [4.5, 3.5, 2.8, 2.2, 1.5, 1.0];
+  const allNotes = ['B1','C2','C#2','D2','D#2','E2','F2','F#2','G2','G#2','A2','A#2','B2',
+                    'C3','C#3','D3','D#3','E3','F3','F#3','G3','G#3','A3','A#3','B3',
+                    'C4','C#4','D4','D#4','E4','F4','F#4','G4','G#4','A4'];
+  // Extend NOTE_TO_MIDI for lower notes
+  const extraMidi = {'B1':35,'C2':36,'C#2':37};
+  Object.assign(NOTE_TO_MIDI, extraMidi);
+
+  w.innerHTML = cf_tuning.map((midi, i) => {
+    const currentNote = Object.entries(NOTE_TO_MIDI)
+      .filter(([k])=>!k.includes('b')&&k.length<=3)
+      .find(([k,v])=>v===midi)?.[0] || 'E2';
+    const isListening = cf_listening_str === i;
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--bg2);border-radius:10px;padding:8px 4px;min-height:140px;box-sizing:border-box;${isListening?'outline:2px solid #FF3B30;outline-offset:-2px':''}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <svg width="52" height="22" viewBox="0 0 52 22" fill="none" style="overflow:visible">
+          ${(()=>{
+            // Sinusoidal wave: amplitude decreases left→right (low→high)
+            const col = isListening ? '#FF3B30' : '#8E8E93';
+            const sw = strThick[i];
+            // Generate path: sine wave with amplitude proportional to (1 - x/W)
+            const W=50, cy=11, steps=60;
+            let d='M 1 '+cy;
+            for(let s=1;s<=steps;s++){
+              const x=1+s*(W-1)/steps;
+              const t=s/steps; // 0→1
+              const amp = (1-t)*9*(6-i)/5 + (t)*1.5; // big at start, small at end
+              const freq = 2.5 + i*0.4; // higher strings = more cycles
+              const y = cy + Math.sin(s/steps*Math.PI*2*freq) * amp;
+              d+=' L '+x.toFixed(1)+' '+y.toFixed(1);
+            }
+            return '<path d="'+d+'" stroke="'+col+'" stroke-width="'+sw+'" stroke-linecap="round" fill="none"/>';
+          })()}
+        </svg>
+        <div style="font-size:8px;color:#636366;font-weight:600;letter-spacing:.5px;height:10px">${i===0?'LOW':i===5?'HIGH':''}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--t3)">${strLabels[i]}</div>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:${isListening?'#FF3B30':'var(--t1)'};text-align:center;font-family:'Share Tech Mono',monospace" id="cf-str-note-${i}">${currentNote}</div>
+      <select onchange="cfSetStringNote(${i},this.value)"
+        style="width:100%;background:var(--bg3);border:none;border-radius:6px;color:var(--t1);font-size:11px;padding:3px 2px;text-align:center">
+        ${allNotes.map(n=>`<option value="${n}" ${NOTE_TO_MIDI[n]===midi?'selected':''}>${n}</option>`).join('')}
+      </select>
+      <button onclick="cfListenStr(${i})"
+        style="width:100%;min-height:30px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:3px;margin-top:auto;
+          background:${isListening?'#FF3B30':'var(--bg3)'};color:${isListening?'#fff':'var(--t2)'}">
+        ${isListening
+          ? `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4" fill="#fff"/></svg> Listening…`
+          : `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="1" width="5" height="7" rx="2.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1.5 6a4.5 4.5 0 0 0 9 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6" y1="10.5" x2="6" y2="12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> Capture`}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+async function cfListenStr(strIdx) {
+  // Stop if already listening to this string
+  if (cf_listening_str === strIdx) {
+    cfStopListenStr();
+    return;
+  }
+  // Stop previous
+  cfStopListenStr();
+  try {
+    cf_mic_stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+    cf_mic_actx = new AudioContext();
+    cf_mic_analyser = cf_mic_actx.createAnalyser();
+    cf_mic_analyser.fftSize = 8192; // high resolution for pitch
+    cf_mic_actx.createMediaStreamSource(cf_mic_stream).connect(cf_mic_analyser);
+    cf_listening_str = strIdx;
+    cfBuildCustomGrid();
+    cfListenLoop(strIdx);
+  } catch(e) {
+    toast('Microphone access denied — HTTPS required');
+  }
+}
+
+function cfStopListenStr() {
+  cancelAnimationFrame(cf_listen_anim);
+  cf_mic_stream?.getTracks().forEach(t=>t.stop());
+  cf_mic_stream = null; cf_mic_actx = null; cf_mic_analyser = null;
+  cf_listening_str = -1;
+  cfBuildCustomGrid();
+}
+
+function cfListenLoop(strIdx) {
+  if (cf_listening_str !== strIdx || !cf_mic_analyser) return;
+  cf_listen_anim = requestAnimationFrame(() => cfListenLoop(strIdx));
+  // Autocorrelation pitch detection (same as tuner)
+  const buf = new Float32Array(cf_mic_analyser.fftSize);
+  cf_mic_analyser.getFloatTimeDomainData(buf);
+  let rms = 0; for(let i=0;i<buf.length;i++) rms+=buf[i]*buf[i];
+  if(Math.sqrt(rms/buf.length) < 0.008) return; // silence
+  let best=-1, bestT=-1;
+  for(let t=32;t<buf.length/2;t++){let r=0;for(let i=0;i<buf.length/2;i++)r+=buf[i]*buf[i+t];if(r>best){best=r;bestT=t;}}
+  if(bestT<1)return;
+  const freq = cf_mic_actx.sampleRate / bestT;
+  if(freq < 50 || freq > 1500) return;
+  // Find closest MIDI note
+  const midi = Math.round(12 * Math.log2(freq / 440) + 69);
+  // Find best note name (prefer no-flat notation)
+  const noteName = Object.entries(NOTE_TO_MIDI)
+    .filter(([k])=>!k.includes('b')&&k.length<=3)
+    .find(([k,v])=>v===midi)?.[0];
+  if (!noteName) return;
+  // Update display live
+  const noteEl = document.getElementById('cf-str-note-' + strIdx);
+  if (noteEl) noteEl.textContent = noteName;
+  // Auto-set after stable detection (just set immediately — user sees it live)
+  cfSetStringNote(strIdx, noteName);
+}
+
+function cfSetStringNote(strIdx, note) {
+  const midi = NOTE_TO_MIDI[note];
+  if (midi === undefined) return;
+  cf_tuning[strIdx] = midi;
+  CF_OPEN_NOTES[strIdx] = midi;
+  cf_tuning_name = 'Custom';
+  const sel = document.getElementById('cf-tuning-sel');
+  if (sel) sel.value = '';
+  cfReset();
+}
+
+function cfBuildCapoRow() {
+  // Now using a select — just sync value
+  const sel = document.getElementById('cf-capo-sel');
+  if (sel) sel.value = cf_capo;
+}
+
+function cfSetCapo(n) {
+  cf_capo = n;
+  const sel = document.getElementById('cf-capo-sel');
+  if (sel) sel.value = n;
+  for(let i=0;i<6;i++) CF_OPEN_NOTES[i] = cf_tuning[i] + cf_capo;
+  cfReset();
+  cfDrawFretboard();
+}
+
+// ══════════════════════════════════════
+// CHORD FINDER
+// ══════════════════════════════════════
+// cf_pos: array of 6 values (strings 6→1), each = -1(mute), 0(open), 1-12(fret)
+let cf_pos = [-1, -1, -1, -1, -1, -1]; // start all muted
+
+// Full chord detection database
+// Format: {name, intervals (semitones from root)}
+const CF_CHORD_TYPES = [
+  {name:'',          ints:[0,4,7]},           // Major
+  {name:'m',         ints:[0,3,7]},           // Minor
+  {name:'7',         ints:[0,4,7,10]},        // Dom7
+  {name:'maj7',      ints:[0,4,7,11]},        // Maj7
+  {name:'m7',        ints:[0,3,7,10]},        // Min7
+  {name:'m7b5',      ints:[0,3,6,10]},        // Half-dim
+  {name:'dim',       ints:[0,3,6]},           // Dim
+  {name:'dim7',      ints:[0,3,6,9]},         // Dim7
+  {name:'aug',       ints:[0,4,8]},           // Aug
+  {name:'sus2',      ints:[0,2,7]},           // Sus2
+  {name:'sus4',      ints:[0,5,7]},           // Sus4
+  {name:'add9',      ints:[0,2,4,7]},         // Add9
+  {name:'6',         ints:[0,4,7,9]},         // Maj6
+  {name:'m6',        ints:[0,3,7,9]},         // Min6
+  {name:'9',         ints:[0,2,4,7,10]},      // Dom9
+  {name:'maj9',      ints:[0,2,4,7,11]},      // Maj9
+  {name:'m9',        ints:[0,2,3,7,10]},      // Min9
+  {name:'11',        ints:[0,4,7,10,14]},     // Dom11
+  {name:'13',        ints:[0,4,7,10,14,21]},  // Dom13
+  {name:'5',         ints:[0,7]},             // Power chord
+  {name:'6/9',       ints:[0,2,4,7,9]},       // 6/9
+];
+
+const CF_NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+// Standard tuning open string MIDI notes (string 6→1)
+const CF_OPEN_NOTES = [40, 45, 50, 55, 59, 64]; // E2 A2 D3 G3 B3 E4
+
+function cfGetNotes() {
+  // Returns array of semitone values (0-11) for each active string
+  const notes = [];
+  cf_pos.forEach((fret, i) => {
+    if (fret === -1) return; // muted
+    const midi = CF_OPEN_NOTES[i] + fret;
+    notes.push(midi % 12);
+  });
+  return [...new Set(notes)]; // unique
+}
+
+function cfDetect() {
+  const notes = cfGetNotes();
+  if (notes.length === 0) {
+    document.getElementById('cf-chord-name').textContent = '—';
+    document.getElementById('cf-chord-notes').textContent = '';
+    document.getElementById('cf-chord-alts').textContent = '';
+    return;
+  }
+
+  const noteNames = notes.map(n => CF_NOTE_NAMES[n]);
+  document.getElementById('cf-chord-notes').textContent = 'Notes: ' + noteNames.join(' · ');
+
+  // Try each possible root
+  const matches = [];
+  for (let root = 0; root < 12; root++) {
+    const normalized = notes.map(n => ((n - root) + 12) % 12).sort((a,b)=>a-b);
+    for (const type of CF_CHORD_TYPES) {
+      const req = type.ints.map(i => i % 12).sort((a,b)=>a-b);
+      // All required intervals must be present
+      const hasAll = req.every(r => normalized.includes(r));
+      // No extra notes that don't fit (allow inversions)
+      const noExtra = normalized.every(n => req.includes(n));
+      if (hasAll && noExtra) {
+        matches.push({ name: CF_NOTE_NAMES[root] + type.name, root, type: type.name, priority: req.length });
+      }
+    }
+  }
+
+  if (matches.length === 0) {
+    // Partial match — find closest
+    document.getElementById('cf-chord-name').textContent = '?';
+    document.getElementById('cf-chord-alts').textContent = 'No exact match — try adjusting fingering';
+    return;
+  }
+
+  // Sort by specificity (more notes = better match)
+  matches.sort((a,b) => b.priority - a.priority);
+  const best = matches[0];
+  document.getElementById('cf-chord-name').textContent = best.name;
+
+  const alts = matches.slice(1, 4).map(m => m.name).join(', ');
+  document.getElementById('cf-chord-alts').textContent = alts ? 'Also: ' + alts : '';
+}
+
+function cfDrawFretboard() {
+  const cv = document.getElementById('cf-fretboard');
+  if (!cv) return;
+  const W = cv.parentElement?.clientWidth || 400;
+  cv.width = W; cv.height = 160;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, W, 160);
+
+  const FRETS = 12;
+  const STRINGS = 6;
+  const padL = 58, padR = 16, padT = 30, padB = 16;
+  const fw = (W - padL - padR) / FRETS;
+  const sh = (160 - padT - padB) / (STRINGS - 1);
+  const dark = currentSkin === 'console';
+  const fg = dark ? 'rgba(255,255,255,.7)' : 'rgba(0,0,0,.7)';
+  const fgFaint = dark ? 'rgba(255,255,255,.15)' : 'rgba(0,0,0,.12)';
+
+  // Nut (thick line at fret 0)
+  ctx.strokeStyle = fg; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + (STRINGS-1)*sh); ctx.stroke();
+
+  // Capo bar
+  if (cf_capo > 0) {
+    const cx = padL + (cf_capo - 0.5) * fw;
+    ctx.strokeStyle = dark ? '#FFD60A' : '#8B5E00';
+    ctx.lineWidth = fw * 0.55;
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath(); ctx.moveTo(cx, padT - 4); ctx.lineTo(cx, padT + (STRINGS-1)*sh + 4); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.lineCap = 'butt';
+    // Label
+    ctx.fillStyle = dark ? '#FFD60A' : '#8B5E00';
+    ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('C' + cf_capo, cx, padT - 8);
+  }
+
+  // Fret lines
+  for (let f = 1; f <= FRETS; f++) {
+    ctx.strokeStyle = fgFaint; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL + f*fw, padT); ctx.lineTo(padL + f*fw, padT + (STRINGS-1)*sh); ctx.stroke();
+    // Fret number
+    ctx.fillStyle = dark ? 'rgba(255,255,255,.3)' : 'rgba(0,0,0,.3)';
+    ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(f, padL + (f - 0.5)*fw, padT - 6);
+  }
+
+  // String lines + labels
+  const strLabels = ['E', 'A', 'D', 'G', 'B', 'e'];
+  for (let s = 0; s < STRINGS; s++) {
+    const y = padT + s * sh;
+    ctx.strokeStyle = fgFaint; ctx.lineWidth = 1 + (STRINGS-1-s) * 0.3;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + FRETS*fw, y); ctx.stroke();
+    // String label — between indicator and nut
+    ctx.fillStyle = fg; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(strLabels[s], 40, y + 4);
+    // Open/mute indicator — tappable area left of nut
+    const pos = cf_pos[s];
+    const ix = 22; // indicator center x — fixed in left margin
+    const accentCol = dark ? '#FF3B30' : '#D97757';
+    const greenCol  = dark ? '#34C759' : '#2A8A2A';
+    if (pos === -1) {
+      // Muted — red circle with X
+      ctx.strokeStyle = accentCol; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(ix, y, 10, 0, Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = accentCol; ctx.lineWidth = 2;
+      const d = 5;
+      ctx.beginPath(); ctx.moveTo(ix-d, y-d); ctx.lineTo(ix+d, y+d); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ix+d, y-d); ctx.lineTo(ix-d, y+d); ctx.stroke();
+    } else if (pos === 0) {
+      // Open — green circle
+      ctx.strokeStyle = greenCol; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(ix, y, 10, 0, Math.PI*2); ctx.stroke();
+    } else {
+      // Fretted — grey ring (tapable to mute)
+      ctx.strokeStyle = dark ? 'rgba(255,255,255,.25)' : 'rgba(0,0,0,.2)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(ix, y, 10, 0, Math.PI*2); ctx.stroke();
+    }
+  }
+
+  // Dot markers on fretboard (frets 3, 5, 7, 9, 12)
+  [3, 5, 7, 9].forEach(f => {
+    ctx.fillStyle = fgFaint;
+    ctx.beginPath(); ctx.arc(padL + (f-0.5)*fw, padT + (STRINGS-1)*sh/2, 5, 0, Math.PI*2); ctx.fill();
+  });
+  // Double dot at 12
+  [padT + sh, padT + (STRINGS-2)*sh].forEach(yy => {
+    ctx.fillStyle = fgFaint;
+    ctx.beginPath(); ctx.arc(padL + 11.5*fw, yy, 5, 0, Math.PI*2); ctx.fill();
+  });
+
+  // Finger dots
+  for (let s = 0; s < STRINGS; s++) {
+    const fret = cf_pos[s];
+    if (fret <= 0) continue;
+    const x = padL + (fret - 0.5) * fw;
+    const y = padT + s * sh;
+    // Solid white dot with colored border
+    const dotCol = dark ? '#FF3B30' : '#1A7AFF';
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(x, y, sh * 0.38, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = dotCol; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, sh * 0.38, 0, Math.PI * 2); ctx.stroke();
+    // Note name in color
+    const midi = CF_OPEN_NOTES[s] + fret;
+    ctx.fillStyle = dotCol;
+    ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(CF_NOTE_NAMES[midi % 12], x, y + 3.5);
+  }
+
+  // (open string note names removed — shown in result area instead)
+}
+
+function cfHandleClick(e) {
+  const cv = document.getElementById('cf-fretboard');
+  if (!cv) return;
+  const rect = cv.getBoundingClientRect();
+  const scaleX = cv.width / rect.width;
+  const scaleY = cv.height / rect.height;
+  const rawX = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
+  const rawY = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
+  const x = rawX * scaleX;
+  const y = rawY * scaleY;
+  const W = cv.width; const H = 160;
+  const FRETS = 12; const STRINGS = 6;
+  const padL = 58, padR = 16, padT = 30, padB = 16;
+  const fw = (W - padL - padR) / FRETS;
+  const sh = (H - padT - padB) / (STRINGS - 1);
+
+  // Identify string
+  const sIdx = Math.round((y - padT) / sh);
+  if (sIdx < 0 || sIdx >= STRINGS) return;
+
+  // Identify fret (x < padL = nut/indicator area — toggle mute ↔ open)
+  if (x < padL - 10) {
+    // Cycle: mute (X) → open (O) → mute (X)
+    cf_pos[sIdx] = cf_pos[sIdx] === -1 ? 0 : -1;
+    cfDrawFretboard();
+    cfDetect();
+    return;
+  } else {
+    const fret = Math.ceil((x - padL) / fw);
+    if (fret < 1 || fret > FRETS) return;
+    // Cycle: same fret → mute, else set fret
+    cf_pos[sIdx] = cf_pos[sIdx] === fret ? -1 : fret;
+  }
+
+  cfDrawFretboard();
+  cfBuildStringControls();
+  cfDetect();
+}
+
+function cfBuildStringControls() { /* removed — fretboard handles all input */ }
+
+function cfSetStr(i, val) {
+  cf_pos[i] = val;
+  cfDrawFretboard();
+  cfBuildStringControls();
+  cfDetect();
+}
+
+function cfReset() {
+  cf_pos = [-1, -1, -1, -1, -1, -1];
+  cfDrawFretboard();
+  cfBuildStringControls();
+  cfDetect();
+}
+
+function cfAddToSelected() {
+  const name = document.getElementById('cf-chord-name')?.textContent;
+  if (!name || name === '—' || name === '?') { toast('No chord detected'); return; }
+  if (!selectedChords.includes(name)) selectedChords.push(name);
+  document.querySelectorAll('#chord-lib [data-chord]').forEach(b => b.classList.toggle('on', selectedChords.includes(b.dataset.chord)));
+  renderChordDisplay();
+  const r = DB.find(d => d.id === CID); if (r) { r.chords = selectedChords.slice(); save(); }
+  toast('"' + name + '" added to selected');
+}
+
+function cfInit() {
+  const cv = document.getElementById('cf-fretboard');
+  if (!cv) return;
+  // Sync CF_OPEN_NOTES with current tuning + capo
+  for(let i=0;i<6;i++) CF_OPEN_NOTES[i] = cf_tuning[i] + cf_capo;
+  cv.addEventListener('click', cfHandleClick);
+  // Touch: tap to place note, swipe to scroll
+  let _tx=0,_ty=0,_moved=false;
+  cv.addEventListener('touchstart', e => {
+    const t=e.touches[0];
+    _tx=t.clientX; _ty=t.clientY; _moved=false;
+  }, {passive:true});
+  cv.addEventListener('touchmove', e => {
+    const t=e.touches[0];
+    if(Math.abs(t.clientX-_tx)>8||Math.abs(t.clientY-_ty)>8) _moved=true;
+  }, {passive:true});
+  cv.addEventListener('touchend', e => {
+    if(_moved) return; // was a scroll — ignore
+    e.preventDefault(); // prevent text selection & ghost click
+    const t=e.changedTouches[0];
+    cfHandleClick({clientX:t.clientX, clientY:t.clientY, currentTarget:cv});
+  }, {passive:false});
+  cv.addEventListener('mousemove', e => {
+    const rect = cv.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (cv.width / rect.width);
+    cv.style.cursor = mx < 44 ? 'pointer' : 'crosshair';
+  });
+  cfBuildTuningSelect();
+  cfBuildCapoRow();
+  cfBuildCustomGrid();
+  cfRenderSavedTunings();
+  cfReset();
+}
+
+
+// ── Save/load custom tunings ──
+let cf_saved_tunings = [];
+try { cf_saved_tunings = JSON.parse(localStorage.getItem('mook_custom_tunings') || '[]'); } catch(e) {}
+
+function cfSaveCustomTuning() {
+  const name = prompt('Name for this tuning:', 'Custom ' + (cf_saved_tunings.length + 1));
+  if (!name) return;
+  const notes = cf_tuning.map(midi => {
+    // Convert MIDI back to note name
+    const entry = Object.entries(NOTE_TO_MIDI).find(([k,v]) => v === midi && !k.includes('b') && k.length <= 3);
+    return entry ? entry[0] : midi;
+  });
+  const tuningObj = { name, notes, notesStr: notes.join(' '), midi: cf_tuning.slice() };
+  // Check for duplicate name
+  const existIdx = cf_saved_tunings.findIndex(t => t.name === name);
+  if (existIdx > -1) cf_saved_tunings[existIdx] = tuningObj;
+  else cf_saved_tunings.push(tuningObj);
+  localStorage.setItem('mook_custom_tunings', JSON.stringify(cf_saved_tunings));
+  cfRenderSavedTunings();
+  // Add to select
+  cfAddCustomToSelect(tuningObj);
+  toast('"' + name + '" saved');
+}
+
+function cfRenderSavedTunings() {
+  const wrap = document.getElementById('cf-saved-tunings-wrap');
+  const list = document.getElementById('cf-saved-tunings-list');
+  if (!wrap || !list) return;
+  wrap.style.display = cf_saved_tunings.length ? 'block' : 'none';
+  list.innerHTML = cf_saved_tunings.map((t, i) => `
+    <div style="display:flex;align-items:center;gap:6px;background:var(--bg2);border-radius:8px;padding:8px 10px">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--t1)">${t.name}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent);margin-top:2px">${t.notesStr}</div>
+      </div>
+      <button class="btn sm" onclick="cfLoadSavedTuning(${i})" style="min-height:32px;padding:0 10px;font-size:12px">Load</button>
+      <button onclick="cfDeleteSavedTuning(${i})" style="color:var(--accent);background:transparent;border:none;font-size:18px;padding:0 4px;cursor:pointer">×</button>
+    </div>`).join('');
+}
+
+function cfLoadSavedTuning(i) {
+  const t = cf_saved_tunings[i];
+  if (!t) return;
+  cf_tuning = t.midi.slice();
+  cf_tuning_name = t.name;
+  for (let s = 0; s < 6; s++) CF_OPEN_NOTES[s] = cf_tuning[s] + cf_capo;
+  cfBuildCustomGrid();
+  cfReset();
+  toast('"' + t.name + '" loaded');
+}
+
+function cfDeleteSavedTuning(i) {
+  cf_saved_tunings.splice(i, 1);
+  localStorage.setItem('mook_custom_tunings', JSON.stringify(cf_saved_tunings));
+  cfRenderSavedTunings();
+}
+
+function cfAddCustomToSelect(tuningObj) {
+  const sel = document.getElementById('cf-tuning-sel');
+  if (!sel) return;
+  // Check if already exists
+  const existing = Array.from(sel.options).find(o => o.text.startsWith(tuningObj.name));
+  if (!existing) {
+    const opt = document.createElement('option');
+    opt.value = tuningObj.notesStr;
+    opt.text = tuningObj.name + ' — ' + tuningObj.notesStr + ' [custom]';
+    sel.insertBefore(opt, sel.firstChild);
+  }
+  sel.value = tuningObj.notesStr;
+}
+
+
+// ══════════════════════════════════════
+// TUNER — TUNING SELECTOR & STRING WAVES
+// ══════════════════════════════════════
+let tunerTargetTuning = tunerStrings.map(s=>({...s})); // copy of standard
+
+function tunerBuildTuningSelect(){
+  const sel = document.getElementById('tuner-tuning-sel');
+  if(!sel) return;
+  // Add saved custom tunings first, then all standard tunings
+  const customOpts = cf_saved_tunings.length
+    ? cf_saved_tunings.map(t=>`<option value="${t.notesStr}">${t.name} (custom) — ${t.notesStr}</option>`).join('')
+    : '';
+  const stdOpts = TUNINGS_DB.flatMap(cat=>cat.items.map(t=>`<option value="${t.notes}">${t.name} — ${t.notes}</option>`)).join('');
+  sel.innerHTML = customOpts + stdOpts;
+  sel.value = 'E A D G B e'; // Standard default
+}
+
+function tunerApplyTuning(notesStr){
+  if(!notesStr) return;
+  const notes = notesStr.split(' ');
+  const strLabels=['6','5','4','3','2','1'];
+  const strNames =['E','A','D','G','B','e'];
+  notes.forEach((n,i)=>{
+    const midi = NOTE_TO_MIDI[n] || cfTuningToMidi([n])[0] || tunerStrings[i].freq;
+    tunerTargetTuning[i] = { note:n, freq: 440*Math.pow(2,(midi-69)/12), lbl:strLabels[i], name:strNames[i] };
+  });
+  // Also update tunerStrings
+  tunerTargetTuning.forEach((t,i)=>{ tunerStrings[i] = {...t}; });
+  tunerBuildStringGrid();
+  if(selectedStr !== null) tunerUpdateTargetNote();
+}
+
+function tunerBuildStringGrid(){
+  const w = document.getElementById('tuner-str-grid');
+  if(!w) return;
+  const strThick = [4.5,3.5,2.8,2.2,1.5,1.0];
+  const strLabels = ['6','5','4','3','2','1'];
+
+  w.innerHTML = tunerTargetTuning.map((s,i)=>{
+    const isActive = selectedStr === i;
+    const accentCol = '#FF3B30';
+    const greenCol  = '#34C759';
+    const col = isActive ? accentCol : '#8E8E93';
+
+    // Generate sine wave SVG path
+    const W=50, cy=11, steps=60;
+    let d='M 1 '+cy;
+    for(let step=1;step<=steps;step++){
+      const x=1+step*(W-1)/steps;
+      const t=step/steps;
+      const amp=(1-t)*9*(6-i)/5+(t)*1.5;
+      const freq=2.5+i*0.4;
+      const y=cy+Math.sin(t*Math.PI*2*freq)*amp;
+      d+=` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+    }
+
+    return `<div onclick="selectStr(${i})" style="
+      display:flex;flex-direction:column;align-items:center;gap:5px;
+      background:${isActive?'rgba(255,59,48,.12)':'#2C2C2E'};
+      border-radius:10px;padding:10px 6px;cursor:pointer;
+      border:1.5px solid ${isActive?accentCol:'transparent'};
+      transition:all .15s;min-height:90px;overflow:hidden">
+      <svg width="40" height="20" viewBox="0 0 52 22" fill="none" style="overflow:hidden;width:100%">
+        <path d="${d}" stroke="${col}" stroke-width="${strThick[i]}" stroke-linecap="round" fill="none"/>
+      </svg>
+      <div style="font-size:8px;color:#636366;font-weight:600;letter-spacing:.5px;height:10px">${i===0?'LOW':i===5?'HIGH':''}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700;color:${isActive?accentCol:'#FFFFFF'};text-align:center" id="tuner-str-note-${i}">${s.note}</div>
+      <div style="font-size:11px;color:#8E8E93">${strLabels[i]}</div>
+    </div>`;
+  }).join('');
+}
+
+function tunerUpdateTargetNote(){
+  const el = document.getElementById('tuner-target-note');
+  if(!el) return;
+  if(selectedStr === null){ el.textContent='Select a string above'; return; }
+  const t = tunerTargetTuning[selectedStr];
+  el.textContent = `Target: ${t.note} (String ${6-selectedStr})`;
+  el.style.color = '#34C759';
+  el.style.borderColor = '#34C759';
+}
+
+// Override selectStr to also update target note display and grid
+const _origSelectStr = selectStr;
+function selectStr(i){
+  selectedStr = i;
+  tunerBuildStringGrid();
+  tunerUpdateTargetNote();
+  buildStrPills(); // keep original pills in sync
+  if(refOn) playRef(tunerStrings[i]?.freq || 440);
+}
+
+
+// ══════════════════════════════════════
+// DICTAPHONE IMPORT
+// ══════════════════════════════════════
+function dictImportAudio(){
+  const inp = document.getElementById('dict-file-input');
+  if(inp) inp.click();
+}
+
+function dictHandleFile(event){
+  const file = event.target.files?.[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  const r = DB.find(d=>d.id===CID);
+  if(!r) return;
+  r.takes = r.takes || [];
+  r.takes.push({
+    url,
+    dur: 0,
+    wave: [],
+    date: new Date().toLocaleDateString('en-GB'),
+    filename: file.name
+  });
+  // Try to get duration
+  const audio = new Audio(url);
+  audio.onloadedmetadata = () => {
+    r.takes[r.takes.length-1].dur = Math.round(audio.duration);
+    save();
+    renderDictTakesList();
+    toast('"'+file.name+'" imported');
+  };
+  audio.onerror = () => { save(); renderDictTakesList(); toast('File imported'); };
+}
+
+function renderDictTakesList(){
+  const r = DB.find(d=>d.id===CID); if(!r) return;
+  const el = document.getElementById('dict-takes-list'); if(!el) return;
+  const takes = r.takes || [];
+  if(!takes.length){ el.innerHTML=''; return; }
+  el.innerHTML = takes.map((t,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:.5px solid var(--border)">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:var(--accent)">
+        <rect x="2" y="4" width="9" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4" fill="none"/>
+        <path d="M11 6.5l3-1.5v6l-3-1.5V6.5Z" stroke="currentColor" stroke-width="1.3" fill="none"/>
+      </svg>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.filename||'Take '+(i+1)}</div>
+        <div style="font-size:11px;color:var(--t3)">${t.date}${t.dur?' · '+fmtT(t.dur):''}</div>
+      </div>
+      <button class="btn icon-only sm" onclick="playTake(${i})" title="Play">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polygon points="2,1 10,6 2,11" fill="currentColor"/></svg>
+      </button>
+      <button class="btn icon-only sm" onclick="loadTakeEditor(${i});showPanel('studio')" title="Edit in Studio">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="6" y1="2" x2="6" y2="10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity=".4"/></svg>
+      </button>
+      <button class="btn icon-only sm" onclick="delTake(${i})" title="Delete" style="color:var(--accent)">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+
+function renderVideoTakes(){
+  const r=DB.find(d=>d.id===CID);if(!r)return;
+  const el=document.getElementById('video-takes');if(!el)return;
+  if(!r.videoTakes||!r.videoTakes.length){el.innerHTML='<div style="font-size:13px;color:var(--t3)">No video takes yet.</div>';return;}
+  el.innerHTML=r.videoTakes.map((t,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:.5px solid var(--border)">
+      <span style="flex:1;font-size:13px;color:var(--t2)">Video ${i+1} · ${t.date}</span>
+      <button class="btn icon-only sm" onclick="const v=document.getElementById('video-preview');if(v){v.srcObject=null;v.src='${t.url}';v.play();}" title="Play"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polygon points="2,1 10,6 2,11" fill="currentColor"/></svg></button>
+      <a class="btn sm" href="${t.url}" download="video-${i+1}.webm" style="text-decoration:none">↓</a>
+      <button class="btn icon-only sm" onclick="const r=DB.find(d=>d.id===CID);if(r){r.videoTakes.splice(${i},1);save();renderVideoTakes();}" style="color:var(--accent)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+    </div>`).join('');
+}
+
+
+// ══════════════════════════════════════
+// CONFIRM DIALOG
+// ══════════════════════════════════════
+function showConfirm(message, onConfirm){
+  // Remove any existing confirm overlay
+  const existing = document.getElementById('confirm-overlay');
+  if(existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'confirm-overlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(4px);
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      background:var(--bg2);border-radius:16px;padding:24px 28px;
+      max-width:320px;width:90%;text-align:center;
+      box-shadow:0 8px 32px rgba(0,0,0,.5);
+    ">
+      <div style="
+        width:52px;height:52px;border-radius:50%;background:rgba(255,59,48,.15);
+        display:flex;align-items:center;justify-content:center;margin:0 auto 14px;
+      ">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <polyline points="3,6 21,6" stroke="#FF3B30" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="#FF3B30" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="10" y1="11" x2="10" y2="17" stroke="#FF3B30" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="14" y1="11" x2="14" y2="17" stroke="#FF3B30" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--t1);letter-spacing:.5px;margin-bottom:8px">
+        Confirm Delete
+      </div>
+      <div style="font-size:14px;color:var(--t3);line-height:1.6;margin-bottom:20px;font-family:-apple-system,'Helvetica Neue',sans-serif;font-weight:400">
+        ${message}
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="document.getElementById('confirm-overlay').remove()"
+          style="flex:1;min-height:46px;border-radius:12px;background:var(--bg3);border:none;
+                 color:var(--t2);font-family:'Bebas Neue',sans-serif;font-size:16px;
+                 letter-spacing:.5px;cursor:pointer">
+          Cancel
+        </button>
+        <button id="confirm-ok"
+          style="flex:1;min-height:46px;border-radius:12px;background:#FF3B30;border:none;
+                 color:#fff;font-family:'Bebas Neue',sans-serif;font-size:16px;
+                 letter-spacing:.5px;cursor:pointer">
+          Delete
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.getElementById('confirm-ok').onclick = () => {
+    overlay.remove();
+    onConfirm();
+  };
+  // Close on backdrop tap
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+}
+
+
+// ══════════════════════════════════════
+// INDEXEDDB — Persistent audio storage
+// ══════════════════════════════════════
+const IDB_NAME = 'mook-audio';
+const IDB_STORE = 'takes';
+let _idb = null;
+
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    if(_idb){res(_idb);return;}
+    const req=indexedDB.open(IDB_NAME,1);
+    req.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains(IDB_STORE))
+        db.createObjectStore(IDB_STORE);
+    };
+    req.onsuccess=e=>{_idb=e.target.result;res(_idb);};
+    req.onerror=e=>rej(e);
+  });
+}
+
+function idbSave(key,blob){
+  return idbOpen().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).put(blob,key);
+    tx.oncomplete=()=>res();
+    tx.onerror=e=>rej(e);
+  }));
+}
+
+function idbLoad(key){
+  return idbOpen().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readonly');
+    const req=tx.objectStore(IDB_STORE).get(key);
+    req.onsuccess=e=>res(e.target.result||null);
+    req.onerror=e=>rej(e);
+  }));
+}
+
+function idbDelete(key){
+  return idbOpen().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).delete(key);
+    tx.oncomplete=()=>res();
+    tx.onerror=e=>rej(e);
+  }));
+}
+
+// Generate stable key for a take
+function takeKey(recId,idx){return 'take-'+recId+'-'+idx;}
+
+
+function toggleExportMenu(){
+  const m=document.getElementById('export-menu');
+  if(m)m.style.display=m.style.display==='none'?'block':'none';
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#export-wrap')){
+    const m=document.getElementById('export-menu');if(m)m.style.display='none';
+  }
+});
+
+
+// ══════════════════════════════════════
+// STUDIO COMPRESSOR
+// ══════════════════════════════════════
+let compOn=false;
+const COMP_PRESETS={
+  Vocal:   {thresh:-24,ratio:6,attack:5, release:80, knee:4,gain:8},
+  Guitar:  {thresh:-28,ratio:8,attack:2, release:60, knee:3,gain:6},
+  Punchy:  {thresh:-32,ratio:12,attack:0.5,release:40,knee:1,gain:10},
+  Gentle:  {thresh:-16,ratio:3,attack:20,release:200,knee:10,gain:4},
+  Limiter: {thresh:-3, ratio:20,attack:0.1,release:30,knee:0,gain:0},
+};
+function buildCompPresets(){
+  const w=document.getElementById('comp-presets');if(!w)return;
+  w.innerHTML=Object.keys(COMP_PRESETS).map(k=>`<button class="ep" onclick="applyCompPreset('${k}')">${k}</button>`).join('');
+}
+function applyCompPreset(name){
+  const p=COMP_PRESETS[name];if(!p)return;
+  document.getElementById('comp-thresh').value=p.thresh;
+  document.getElementById('comp-ratio').value=p.ratio;
+  document.getElementById('comp-attack').value=p.attack;
+  document.getElementById('comp-release').value=p.release;
+  document.getElementById('comp-knee').value=p.knee;
+  document.getElementById('comp-makeup').value=p.gain;
+  updComp();
+}
+function updComp(){
+  const t=document.getElementById('comp-thresh')?.value;
+  const r=document.getElementById('comp-ratio')?.value;
+  const a=document.getElementById('comp-attack')?.value;
+  const re=document.getElementById('comp-release')?.value;
+  const k=document.getElementById('comp-knee')?.value;
+  const g=document.getElementById('comp-makeup')?.value;
+  if(document.getElementById('comp-thresh-val'))document.getElementById('comp-thresh-val').textContent=t+' dB';
+  if(document.getElementById('comp-ratio-val'))document.getElementById('comp-ratio-val').textContent=r+':1';
+  if(document.getElementById('comp-attack-val'))document.getElementById('comp-attack-val').textContent=a+' ms';
+  if(document.getElementById('comp-release-val'))document.getElementById('comp-release-val').textContent=re+' ms';
+  if(document.getElementById('comp-knee-val'))document.getElementById('comp-knee-val').textContent=k+' dB';
+  if(document.getElementById('comp-gain-val'))document.getElementById('comp-gain-val').textContent=(g>0?'+':'')+g+' dB';
+}
+let _liveComp=null,_grInterval=null;
+function toggleComp(){
+  compOn=!compOn;
+  const t=document.getElementById('comp-tog');const l=document.getElementById('comp-lbl');
+  if(t)t.classList.toggle('on',compOn);
+  if(l)l.textContent=compOn?'Compressor On':'Compressor Off';
+}
+function startGRMeter(comp){
+  _liveComp=comp;
+  clearInterval(_grInterval);
+  _grInterval=setInterval(()=>{
+    if(!_liveComp||!compOn){clearInterval(_grInterval);return;}
+    const gr=Math.abs(_liveComp.reduction||0);
+    const bar=document.getElementById('comp-gr-bar');
+    const val=document.getElementById('comp-gr-val');
+    if(bar)bar.style.width=Math.min(gr/20*100,100)+'%';
+    if(val)val.textContent='-'+gr.toFixed(1)+' dB';
+  },80);
+}
+function toggleCompBands(){
+  const w=document.getElementById('comp-bands-wrap');const b=document.getElementById('comp-bands-btn');
+  if(!w)return;const open=w.style.display==='none';
+  w.style.display=open?'flex':'none';
+  if(b)b.textContent=open?'Hide Controls':'Show Controls';
+  if(open){buildCompPresets();}
+}
+function getCompSettings(){
+  return{
+    threshold:+(document.getElementById('comp-thresh')?.value||-24),
+    ratio:+(document.getElementById('comp-ratio')?.value||4),
+    attack:+(document.getElementById('comp-attack')?.value||3)/1000,
+    release:+(document.getElementById('comp-release')?.value||250)/1000,
+    knee:+(document.getElementById('comp-knee')?.value||6),
+    gain:+(document.getElementById('comp-makeup')?.value||0),
+  };
+}
+
+
+// ══════════════════════════════════════
+// SWIPE GESTURES ON REC ITEMS
+// ══════════════════════════════════════
+let _swipeId=null,_swipeX0=0,_swipeY0=0,_swiping=false,_swipeDx=0;
+const SWIPE_THRESH=72;
+
+function swipeStart(e,id){
+  const t=e.touches?e.touches[0]:e;
+  _swipeId=id;_swipeX0=t.clientX;_swipeY0=t.clientY;_swiping=true;_swipeDx=0;
+}
+function swipeMove(e,id){
+  if(!_swiping||_swipeId!==id)return;
+  const t=e.touches?e.touches[0]:e;
+  const dx=t.clientX-_swipeX0;
+  const dy=Math.abs(t.clientY-_swipeY0);
+  if(dy>25&&Math.abs(dx)<15){_swiping=false;resetSwipe(id);return;}
+  _swipeDx=dx;
+  requestAnimationFrame(()=>{
+    const item=document.querySelector(`#wrap-${id} .rec-item`);
+    const star=document.getElementById('star-'+id);
+    const del=document.getElementById('sdel-'+id);
+    if(!item)return;
+    const damped=dx*0.7; // damping for smoother feel
+    const clamped=Math.max(-90,Math.min(90,damped));
+    item.style.transition='none';
+    item.style.transform=`translateX(${clamped}px)`;
+    if(dx>0&&star){
+      star.style.transition='none';
+      star.style.transform=`translateX(${Math.max(-100+dx,0)-100}px)`;
+    }
+    if(dx<0&&del){
+      del.style.transition='none';
+      del.style.transform=`translateX(${Math.min(100+dx,0)+100}px)`;
+    }
+  });
+  if(e.cancelable&&Math.abs(dx)>10)e.preventDefault();
+}
+function swipeEnd(e,id){
+  if(!_swiping||_swipeId!==id)return;
+  _swiping=false;
+  if(_swipeDx>SWIPE_THRESH){
+    // Star/unstar
+    const d=DB.find(x=>x.id===id);if(d){d.starred=!d.starred;save();}
+    resetSwipe(id);setTimeout(renderList,200);
+  } else if(_swipeDx<-SWIPE_THRESH){
+    // Delete
+    resetSwipe(id);
+    const d=DB.find(x=>x.id===id);
+    const name=d?d.titre:'this recording';
+    showConfirm('Delete "'+name+'"?',()=>{
+      DB=DB.filter(x=>x.id!==id);
+      if(CID===id)CID=null;
+      save();renderList();
+    });
+  } else {
+    resetSwipe(id);
+  }
+  _swipeId=null;_swipeDx=0;
+}
+function resetSwipe(id){
+  const item=document.querySelector(`#wrap-${id} .rec-item`);
+  const star=document.getElementById('star-'+id);
+  const del=document.getElementById('sdel-'+id);
+  if(item)item.style.transform='';
+  if(star)star.style.transform='';
+  if(del)del.style.transform='';
+}
+
+
+function previewComp(){
+  if(!curBuf){toast('Load a take in Studio first');return;}
+  const wasComp=compOn;compOn=true;
+  playBufWithFX(curBuf,0);
+  setTimeout(()=>compOn=wasComp,100);
+}
+function previewRev(){
+  if(!curBuf){toast('Load a take in Studio first');return;}
+  const wasRev=revOn;revOn=true;
+  playBufWithFX(curBuf,0);
+  setTimeout(()=>revOn=wasRev,100);
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+renderList();
+// Restore blob URLs from IndexedDB for takes in current DB
+DB.forEach(r=>{
+  (r.takes||[]).forEach((t,i)=>{
+    const idbKey=t.idbKey||takeKey(r.id,i);
+    if(!t.url&&idbKey){
+      idbLoad(idbKey).then(blob=>{
+        if(blob){t.url=URL.createObjectURL(blob);}
+      }).catch(()=>{});
+    }
+  });
+});
+</script>
+</body>
+</html>
