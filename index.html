@@ -1354,8 +1354,8 @@ function renderDetail(){
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="1,3.5 13,3.5" stroke="#FF3B30" stroke-width="1.4" stroke-linecap="round"/><path d="M4.5 3.5V2.2a.5.5 0 01.5-.5h3.5a.5.5 0 01.5.5v1.3M5 6v5M9 6v5" stroke="#FF3B30" stroke-width="1.4" stroke-linecap="round"/><path d="M2.5 3.5l.8 7.3a1 1 0 001 .9h5.4a1 1 0 001-.9l.8-7.3" stroke="#FF3B30" stroke-width="1.4" stroke-linecap="round"/></svg>
         </button>
       </div>
-      <canvas id="tk${i}" width="300" height="36"
-        style="width:100%;border-radius:8px;background:var(--bg3);cursor:pointer;display:block"
+      <canvas id="tk${i}" width="600" height="72"
+        style="width:100%;height:36px;border-radius:8px;background:#2C2C2E;cursor:pointer;display:block"
         onclick="loadTakeEditor(${i});showPanel('studio')" title="Open in Studio"></canvas>
     </div>`).join(''):'<div style="font-size:13px;color:var(--t3)">No takes yet.</div>';
 
@@ -1513,11 +1513,16 @@ function finishRec(){
   save();
 
   // Save blob to IndexedDB for persistence
-  // Keep blob reference for this session
-  const _sessionBlobs = window._sessionBlobs || (window._sessionBlobs={});
-  _sessionBlobs[idbKey] = blob;
+  // Keep blob reference and pre-create Audio element
+  window._sessionBlobs=window._sessionBlobs||{};
+  window._sessionBlobs[idbKey]=blob;
   const url=URL.createObjectURL(blob);
   r.takes[takeIdx].url=url;
+  // Pre-create audio element so play() is instant on tap
+  if(typeof _audioEls!=='undefined'){
+    const a=new Audio(url);a.preload='auto';a.volume=1.0;
+    _audioEls[idbKey]=a;
+  }
   idbSave(idbKey,blob).then(()=>{
     // Use analyser snapshot for waveform — no decodeAudioData needed
     // This avoids the WebM/Opus decoding issue on iOS Safari
@@ -1529,6 +1534,15 @@ function finishRec(){
     }if(false){}}// end dummy block
   }).catch(()=>toast('Storage error'));
 
+  // Draw waveform immediately after a short delay
+  setTimeout(()=>{
+    const cv=document.getElementById('tk'+takeIdx);
+    if(cv&&waveSnap.length>2){
+      cv.width=cv.parentElement?.offsetWidth||300;
+      cv.height=36;
+      drawMini(cv,waveSnap,'#FFFFFF');
+    }
+  },300);
   renderDetail();
   toast('Take saved!');
 }
@@ -1610,27 +1624,54 @@ function updRecUI(){
     if(pb)pb.textContent='Resume';
   }
 }
+// Pre-created audio elements keyed by idbKey
+const _audioEls={};
+
 function playTake(i){
   const r=DB.find(d=>d.id===CID);if(!r)return;
   const t=r.takes[i];if(!t){toast('No audio');return;}
   const idbKey=t.idbKey||takeKey(CID,i);
 
-  // Priority 1: fresh blob URL from session blob
-  const sb=window._sessionBlobs&&window._sessionBlobs[idbKey];
-  if(sb){_playURL(URL.createObjectURL(sb),idbKey);return;}
+  // Stop any playing
+  Object.values(_audioEls).forEach(a=>{try{a.pause();a.currentTime=0;}catch(e){}});
+  if(_currentAudio){try{_currentAudio.pause();}catch(e){}_currentAudio=null;}
 
-  // Priority 2: existing session URL
-  if(t.url){_playURL(t.url,idbKey);return;}
+  // Use pre-created element if available (fastest — synchronous play())
+  if(_audioEls[idbKey]){
+    _audioEls[idbKey].currentTime=0;
+    _audioEls[idbKey].play().then(()=>toast('▶')).catch(()=>toast('Audio blocked'));
+    return;
+  }
 
-  // Priority 3: load blob from IndexedDB and create URL
+  // Use session URL directly — must call play() synchronously
+  const url = (window._sessionBlobs&&window._sessionBlobs[idbKey])
+    ? URL.createObjectURL(window._sessionBlobs[idbKey])
+    : t.url;
+
+  if(url){
+    const a=new Audio(url);
+    a.volume=1.0;
+    _audioEls[idbKey]=a;
+    _currentAudio=a;
+    // play() called directly in user gesture — synchronous
+    a.play().then(()=>toast('▶')).catch(err=>{
+      console.error('play() failed:',err);
+      toast('Audio blocked — tap screen first');
+    });
+    return;
+  }
+
+  // Last resort: load from IndexedDB (loses user gesture — may be blocked)
+  toast('Loading audio…');
   idbLoad(idbKey).then(blob=>{
-    if(!blob){toast('Take not found — re-record');return;}
+    if(!blob){toast('Take not found');return;}
+    const u=URL.createObjectURL(blob);
+    t.url=u;
     window._sessionBlobs=window._sessionBlobs||{};
     window._sessionBlobs[idbKey]=blob;
-    const url=URL.createObjectURL(blob);
-    t.url=url;
-    _playURL(url,idbKey);
-  }).catch(()=>toast('Storage error'));
+    _audioEls[idbKey]=new Audio(u);
+    toast('Ready — tap Play again');
+  });
 }
 
 let _currentAudio = null;
