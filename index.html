@@ -3473,8 +3473,8 @@ function previewRev(){
 // ══════════════════════════════════════
 // IOS AUDIO UNLOCK
 // ══════════════════════════════════════
-// Reset if version changed
-if(localStorage.getItem('mook_audio_v')!=='2'){localStorage.removeItem('mook_audio_unlocked');localStorage.setItem('mook_audio_v','2');}
+// Reset version
+if(localStorage.getItem('mook_audio_v')!=='3'){localStorage.removeItem('mook_audio_unlocked');localStorage.setItem('mook_audio_v','3');}
 let _audioUnlocked = localStorage.getItem('mook_audio_unlocked') === '1';
 
 function checkAudioUnlock(){
