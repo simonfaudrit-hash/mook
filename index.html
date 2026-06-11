@@ -1447,17 +1447,17 @@ async function startRec(){
     const micSrc=actx.createMediaStreamSource(recStream);
 
     // Signal chain: Mic → Gain → Compressor → Limiter → Analyser → Recorder
-    const inputGain=actx.createGain();inputGain.gain.value=1.8;
+    const inputGain=actx.createGain();inputGain.gain.value=1.0;
 
     const comp=actx.createDynamicsCompressor();
-    comp.threshold.value=-18;comp.knee.value=10;
-    comp.ratio.value=3;comp.attack.value=0.005;comp.release.value=0.12;
+    comp.threshold.value=-12;comp.knee.value=15;
+    comp.ratio.value=2;comp.attack.value=0.01;comp.release.value=0.15;
 
     // Makeup gain to boost quiet sounds after compression
-    const makeupGain=actx.createGain();makeupGain.gain.value=1.5;
+    const makeupGain=actx.createGain();makeupGain.gain.value=1.0;
 
     const limiter=actx.createDynamicsCompressor();
-    limiter.threshold.value=-1;limiter.knee.value=0;
+    limiter.threshold.value=-3;limiter.knee.value=0;
     limiter.ratio.value=20;limiter.attack.value=0.001;limiter.release.value=0.1;
 
     recAnalyser=actx.createAnalyser();recAnalyser.fftSize=1024;
@@ -1629,49 +1629,22 @@ const _audioEls={};
 
 function playTake(i){
   const r=DB.find(d=>d.id===CID);if(!r)return;
-  const t=r.takes[i];if(!t){toast('No audio');return;}
-  const idbKey=t.idbKey||takeKey(CID,i);
-
-  // Stop any playing
-  Object.values(_audioEls).forEach(a=>{try{a.pause();a.currentTime=0;}catch(e){}});
-  if(_currentAudio){try{_currentAudio.pause();}catch(e){}_currentAudio=null;}
-
-  // Use pre-created element if available (fastest — synchronous play())
-  if(_audioEls[idbKey]){
-    _audioEls[idbKey].currentTime=0;
-    _audioEls[idbKey].play().then(()=>toast('▶')).catch(()=>toast('Audio blocked'));
-    return;
-  }
-
-  // Use session URL directly — must call play() synchronously
-  const url = (window._sessionBlobs&&window._sessionBlobs[idbKey])
-    ? URL.createObjectURL(window._sessionBlobs[idbKey])
-    : t.url;
-
-  if(url){
-    const a=new Audio(url);
-    a.volume=1.0;
-    _audioEls[idbKey]=a;
-    _currentAudio=a;
-    // play() called directly in user gesture — synchronous
-    a.play().then(()=>toast('▶')).catch(err=>{
-      console.error('play() failed:',err);
-      toast('Audio blocked — tap screen first');
+  const t=r.takes[i];if(!t||!t.url){toast('No audio — re-record');return;}
+  // Stop current
+  if(_currentAudio){_currentAudio.pause();_currentAudio=null;}
+  // Play directly — must be synchronous in tap handler
+  const a=new Audio(t.url);
+  a.volume=1.0;
+  _currentAudio=a;
+  a.play()
+    .then(()=>toast('▶'))
+    .catch(()=>{
+      // iOS: audio context not yet unlocked — unlock it first
+      const ctx=new AudioContext();
+      ctx.resume().then(()=>{
+        a.play().then(()=>toast('▶')).catch(()=>toast('Tap screen then try again'));
+      });
     });
-    return;
-  }
-
-  // Last resort: load from IndexedDB (loses user gesture — may be blocked)
-  toast('Loading audio…');
-  idbLoad(idbKey).then(blob=>{
-    if(!blob){toast('Take not found');return;}
-    const u=URL.createObjectURL(blob);
-    t.url=u;
-    window._sessionBlobs=window._sessionBlobs||{};
-    window._sessionBlobs[idbKey]=blob;
-    _audioEls[idbKey]=new Audio(u);
-    toast('Ready — tap Play again');
-  });
 }
 
 let _currentAudio = null;
@@ -1864,35 +1837,31 @@ function animPH(){
 let _studioTakeURL=null; // URL of the take currently loaded in studio
 
 function playAudio(){
-  // If we have a decoded buffer, use it (best quality + FX)
+  // Try buffer first (if decode worked)
   if(curBuf){
     const ctx=getCtx();
-    const go=()=>playBufWithFX(curBuf,pbOff||0);
-    ctx.state==='suspended'?ctx.resume().then(go):go();
+    if(ctx.state==='suspended'){ctx.resume().then(()=>playBufWithFX(curBuf,pbOff||0));}
+    else playBufWithFX(curBuf,pbOff||0);
     return;
   }
-  // Fallback: HTML Audio (iOS WebM format)
+  // Fallback: direct HTML Audio from stored URL
   if(_studioTakeURL){
-    playViaMediaElement(_studioTakeURL);
+    if(_currentAudio){_currentAudio.pause();_currentAudio=null;}
+    const a=new Audio(_studioTakeURL);
+    a.volume=1.0;_currentAudio=a;
+    a.play().then(()=>toast('▶')).catch(()=>toast('Tap screen then try again'));
     return;
   }
-  toast('Load a take first — tap Studio on a take in Record');
+  toast('Open a take from Record first');
 }
 
 function playViaMediaElement(url){
-  // Fallback: play via HTML Audio through WebAudio for FX chain
-  if(_currentAudio){_currentAudio.pause();_currentAudio=null;}
-  const audio=new Audio(url);
-  audio.volume=1.0;
-  _currentAudio=audio;
-  // Try to connect to AudioContext for FX (may not work on iOS with WebM)
-  try{
-    const ctx=getCtx();
-    const src=ctx.createMediaElementSource(audio);
-    src.connect(ctx.destination);
-  }catch(e){/* play without FX */}
-  audio.play().then(()=>toast('▶ Playing')).catch(e=>{
-    toast('Cannot play in Studio — use Play button in Record');
+  _stopAll();
+  const a=new Audio(url);
+  a.volume=1.0;_currentAudio=a;
+  a.play().then(()=>toast('▶ Playing')).catch(e=>{
+    console.warn('studio play:',e);
+    toast('Cannot play — use Play in Record');
   });
 }
 function stopAudio(){if(sourceNode){try{sourceNode.stop();}catch(e){}}sourceNode=null;isPlaying=false;cancelAnimationFrame(phAnim);pbOff=0;const ph=document.getElementById('wv-ph');if(ph)ph.style.left='0';}
