@@ -1116,7 +1116,6 @@ function toggleSettings(){
 function setFilter(btn){
   document.querySelectorAll('#p-notebook .pill').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');FM=btn.dataset.f;renderList();
-checkAudioUnlock();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -1188,7 +1187,6 @@ function autoSave(){
     r.notes=document.getElementById('d-notes')?.value||'';
     if(r.source==='dictaphone'){r.dictRef=document.getElementById('d-ref')?.value||'';}
     save();renderList();
-checkAudioUnlock();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -1205,7 +1203,6 @@ DB.forEach(r=>{
 }
 function setStatut(s){
   const r=DB.find(d=>d.id===CID);if(!r)return;r.statut=s;save();renderDetail();renderList();
-checkAudioUnlock();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -1228,7 +1225,6 @@ function deleteRec(id){
   DB=DB.filter(d=>d.id!==id);
   DB.forEach(d=>{d.linkedIds=(d.linkedIds||[]).filter(v=>v!==id);});
   save();CID=null;renderList();
-checkAudioUnlock();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -3441,7 +3437,6 @@ function swipeEnd(e,id){
       DB=DB.filter(x=>x.id!==id);
       if(CID===id)CID=null;
       save();renderList();
-checkAudioUnlock();
     });
   } else {
     resetSwipe(id);
@@ -3506,6 +3501,8 @@ async function unlockAudio(){
 // ══════════════════════════════════════
 // IOS AUDIO UNLOCK
 // ══════════════════════════════════════
+// Reset if version changed
+if(localStorage.getItem('mook_audio_v')!=='2'){localStorage.removeItem('mook_audio_unlocked');localStorage.setItem('mook_audio_v','2');}
 let _audioUnlocked = localStorage.getItem('mook_audio_unlocked') === '1';
 
 function checkAudioUnlock(){
@@ -3547,7 +3544,6 @@ function doUnlockAudio(){
 // INIT
 // ══════════════════════════════════════
 renderList();
-checkAudioUnlock();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
