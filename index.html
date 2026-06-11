@@ -1476,7 +1476,11 @@ async function startRec(){
   if(!CID){toast('Select a recording first');showPanel('notebook');return;}
   try{
     recStream=await navigator.mediaDevices.getUserMedia({audio:{
-      echoCancellation:true,noiseSuppression:true,sampleRate:48000
+      echoCancellation:false,
+      noiseSuppression:false,
+      autoGainControl:false,
+      sampleRate:48000,
+      channelCount:1
     }});
     const actx=new AudioContext({sampleRate:48000});
     const micSrc=actx.createMediaStreamSource(recStream);
@@ -1507,16 +1511,24 @@ async function startRec(){
     const dest=actx.createMediaStreamDestination();
     limiter.connect(dest);
     recChunks=[];
-    // iOS Safari supports audio/mp4, use it for better compatibility
-    let options={audioBitsPerSecond:320000};
-    if(MediaRecorder.isTypeSupported('audio/mp4')){
-      options.mimeType='audio/mp4';
-    } else if(MediaRecorder.isTypeSupported('audio/webm;codecs=opus')){
-      options.mimeType='audio/webm;codecs=opus';
-    } else if(MediaRecorder.isTypeSupported('audio/webm')){
-      options.mimeType='audio/webm';
+    // Best quality settings
+    let options={};
+    const formats=[
+      'audio/webm;codecs=pcm',
+      'audio/wav',
+      'audio/webm;codecs=opus',
+      'audio/ogg;codecs=opus',
+      'audio/mp4',
+      'audio/webm',
+    ];
+    for(const f of formats){
+      if(MediaRecorder.isTypeSupported(f)){options.mimeType=f;break;}
     }
-    console.log('Recording with mimeType:',options.mimeType||'default');
+    // Only set bitrate for compressed formats
+    if(!options.mimeType||!options.mimeType.includes('pcm')&&!options.mimeType.includes('wav')){
+      options.audioBitsPerSecond=256000;
+    }
+    console.log('Recording:',options.mimeType||'default');
     mediaRec=new MediaRecorder(dest.stream,options);
     mediaRec.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};
     mediaRec.onstop=finishRec;mediaRec.start(100);recState='recording';recSec=0;
@@ -1567,17 +1579,15 @@ function finishRec(){
 
   // Draw waveform immediately after a short delay
   renderDetail();
-  // Draw waveform after DOM renders
   setTimeout(()=>{
     const cv=document.getElementById('tk'+takeIdx);
     if(!cv)return;
-    const w=cv.parentElement?.offsetWidth||300;
-    cv.width=w*2;cv.height=72;
-    cv.style.width='100%';cv.style.height='36px';
+    const W=Math.max(cv.parentElement?.clientWidth||280, 100);
+    cv.width=W; cv.height=36;
     if(waveSnap&&waveSnap.length>2){
       drawMini(cv,waveSnap,'#FFFFFF');
     }
-  },400);
+  },600);
   toast('Take saved!');
 }
 // Rolling waveform accumulator during recording
