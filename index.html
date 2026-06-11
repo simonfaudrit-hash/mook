@@ -1535,15 +1535,18 @@ function finishRec(){
   }).catch(()=>toast('Storage error'));
 
   // Draw waveform immediately after a short delay
+  renderDetail();
+  // Draw waveform after DOM renders
   setTimeout(()=>{
     const cv=document.getElementById('tk'+takeIdx);
-    if(cv&&waveSnap.length>2){
-      cv.width=cv.parentElement?.offsetWidth||300;
-      cv.height=36;
+    if(!cv)return;
+    const w=cv.parentElement?.offsetWidth||300;
+    cv.width=w*2;cv.height=72;
+    cv.style.width='100%';cv.style.height='36px';
+    if(waveSnap&&waveSnap.length>2){
       drawMini(cv,waveSnap,'#FFFFFF');
     }
-  },300);
-  renderDetail();
+  },400);
   toast('Take saved!');
 }
 // Rolling waveform accumulator during recording
@@ -1859,9 +1862,15 @@ function playViaMediaElement(url){
   _stopAll();
   const a=new Audio(url);
   a.volume=1.0;_currentAudio=a;
+  // Ensure audio context is unlocked
+  const ctx=getCtx();
+  if(ctx.state==='suspended') ctx.resume();
   a.play().then(()=>toast('▶ Playing')).catch(e=>{
-    console.warn('studio play:',e);
-    toast('Cannot play — use Play in Record');
+    console.warn('studio play failed, retrying:',e);
+    // Create fresh element and retry
+    const a2=new Audio(url);
+    a2.volume=1.0;_currentAudio=a2;
+    a2.play().catch(e2=>toast('No sound — tap screen and retry'));
   });
 }
 function stopAudio(){if(sourceNode){try{sourceNode.stop();}catch(e){}}sourceNode=null;isPlaying=false;cancelAnimationFrame(phAnim);pbOff=0;const ph=document.getElementById('wv-ph');if(ph)ph.style.left='0';}
@@ -3434,6 +3443,37 @@ function previewRev(){
   playBufWithFX(curBuf,0);
   setTimeout(()=>revOn=wasRev,100);
 }
+
+
+// ══════════════════════════════════════
+// iOS AUDIO UNLOCK — must happen on first user tap
+// ══════════════════════════════════════
+let _audioUnlocked = false;
+const _silentBuffer = new Uint8Array([
+  255,251,24,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  73,110,102,111,0,0,0,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+]);
+
+async function unlockAudio(){
+  if(_audioUnlocked) return;
+  _audioUnlocked = true;
+  try {
+    const ctx = getCtx();
+    if(ctx.state === 'suspended') await ctx.resume();
+    // Play a silent buffer to fully unlock
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    src.stop(0.001);
+  } catch(e) {}
+}
+
+// Unlock on EVERY user gesture — belt and suspenders
+['touchstart','touchend','mousedown','click'].forEach(evt => {
+  document.addEventListener(evt, unlockAudio, {once: false, passive: true});
+});
 
 // ══════════════════════════════════════
 // INIT
