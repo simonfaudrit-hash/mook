@@ -3467,35 +3467,7 @@ function previewRev(){
 }
 
 
-// ══════════════════════════════════════
-// iOS AUDIO UNLOCK — must happen on first user tap
-// ══════════════════════════════════════
-let _audioUnlocked = false;
-const _silentBuffer = new Uint8Array([
-  255,251,24,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  73,110,102,111,0,0,0,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-]);
 
-async function unlockAudio(){
-  if(_audioUnlocked) return;
-  _audioUnlocked = true;
-  try {
-    const ctx = getCtx();
-    if(ctx.state === 'suspended') await ctx.resume();
-    // Play a silent buffer to fully unlock
-    const buf = ctx.createBuffer(1, 1, 22050);
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.connect(ctx.destination);
-    src.start(0);
-    src.stop(0.001);
-  } catch(e) {}
-}
-
-// Unlock on EVERY user gesture — belt and suspenders
-['touchstart','touchend','mousedown','click'].forEach(evt => {
-  document.addEventListener(evt, unlockAudio, {once: false, passive: true});
-});
 
 
 // ══════════════════════════════════════
