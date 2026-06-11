@@ -1389,8 +1389,8 @@ function renderDetail(){
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="1,3.5 13,3.5" stroke="#FF3B30" stroke-width="1.4" stroke-linecap="round"/><path d="M4.5 3.5V2.2a.5.5 0 01.5-.5h3.5a.5.5 0 01.5.5v1.3M5 6v5M9 6v5" stroke="#FF3B30" stroke-width="1.4" stroke-linecap="round"/><path d="M2.5 3.5l.8 7.3a1 1 0 001 .9h5.4a1 1 0 001-.9l.8-7.3" stroke="#FF3B30" stroke-width="1.4" stroke-linecap="round"/></svg>
         </button>
       </div>
-      <canvas id="tk${i}" width="600" height="72"
-        style="width:100%;height:36px;border-radius:8px;background:#2C2C2E;cursor:pointer;display:block"
+      <canvas id="tk${i}" height="36"
+        style="width:100%;border-radius:8px;background:#2C2C2E;cursor:pointer;display:block"
         onclick="loadTakeEditor(${i});showPanel('studio')" title="Open in Studio"></canvas>
     </div>`).join(''):'<div style="font-size:13px;color:var(--t3)">No takes yet.</div>';
 
@@ -1529,7 +1529,7 @@ async function startRec(){
       options.audioBitsPerSecond=256000;
     }
     console.log('Recording:',options.mimeType||'default');
-    mediaRec=new MediaRecorder(dest.stream,options);
+    mediaRec=new MediaRecorder(recStream,options);
     mediaRec.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};
     mediaRec.onstop=finishRec;mediaRec.start(100);recState='recording';recSec=0;
     recTimer=setInterval(()=>{recSec++;updRecUI();},1000);updRecUI();drawLive();
@@ -1579,15 +1579,17 @@ function finishRec(){
 
   // Draw waveform immediately after a short delay
   renderDetail();
-  setTimeout(()=>{
+  // Draw new take waveform with retry
+  let _newWaveAttempts=0;
+  const _drawNewWave=()=>{
     const cv=document.getElementById('tk'+takeIdx);
-    if(!cv)return;
-    const W=Math.max(cv.parentElement?.clientWidth||280, 100);
-    cv.width=W; cv.height=36;
-    if(waveSnap&&waveSnap.length>2){
-      drawMini(cv,waveSnap,'#FFFFFF');
-    }
-  },600);
+    if(!cv){if(_newWaveAttempts++<10)setTimeout(_drawNewWave,200);return;}
+    const W=cv.getBoundingClientRect().width||cv.offsetWidth||cv.parentElement?.offsetWidth||0;
+    if(W<10){if(_newWaveAttempts++<10)setTimeout(_drawNewWave,200);return;}
+    cv.width=Math.round(W);cv.height=36;
+    if(waveSnap&&waveSnap.length>2) drawMini(cv,waveSnap,'#FFFFFF');
+  };
+  setTimeout(_drawNewWave,400);
   toast('Take saved!');
 }
 // Rolling waveform accumulator during recording
@@ -1839,9 +1841,34 @@ function toggleRev(){revOn=!revOn;const t=document.getElementById('rev-tog');con
 function setRevType(btn){revType=btn.dataset.rt;document.querySelectorAll('.rt').forEach(b=>b.classList.toggle('on',b.dataset.rt===revType));}
 function updDW(v){const l=document.getElementById('dw-lbl');if(l)l.textContent=v+'%';}
 function makeIR(actx,type){
-  const p={Room:{d:1.2,dc:2},Hall:{d:3,dc:4},Plate:{d:2,dc:3}}[type]||{d:1.2,dc:2};
-  const sr=actx.sampleRate,len=Math.round(sr*p.d);const buf=actx.createBuffer(2,len,sr);
-  for(let ch=0;ch<2;ch++){const d=buf.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,p.dc);}return buf;
+  // Room: short warm 0.4s — studio/small room feel
+  // Hall: medium 1.5s
+  // Plate: bright 0.8s
+  const p={
+    Room: {d:0.4, dc:4,  pre:0.005},
+    Hall: {d:1.5, dc:2.5,pre:0.02},
+    Plate:{d:0.8, dc:3,  pre:0.001}
+  }[type]||{d:0.4,dc:4,pre:0.005};
+  const sr=actx.sampleRate;
+  const len=Math.round(sr*p.d);
+  const preDelay=Math.round(sr*p.pre);
+  const buf=actx.createBuffer(2,len+preDelay,sr);
+  for(let ch=0;ch<2;ch++){
+    const d=buf.getChannelData(ch);
+    // Pre-delay silence
+    for(let i=0;i<preDelay;i++) d[i]=0;
+    // Decay with early reflections
+    for(let i=0;i<len;i++){
+      const t=i/len;
+      const decay=Math.pow(1-t,p.dc);
+      // Add subtle early reflections for warmth
+      const er=i<sr*0.02?(Math.random()*2-1)*0.3*decay:0;
+      d[i+preDelay]=(Math.random()*2-1)*decay*0.7+er;
+    }
+    // Low-pass filter simulation — roll off highs for warmth
+    for(let i=1;i<d.length;i++) d[i]=d[i]*0.6+d[i-1]*0.4;
+  }
+  return buf;
 }
 
 // ══════════════════════════════════════
