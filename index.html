@@ -1455,8 +1455,21 @@ function renderDetail(){
     const ti=document.getElementById('takes-inline');
     if(ti)ti.innerHTML=takesHTML;
     setTimeout(()=>{
-      (r.takes||[]).forEach((t,i)=>{const cv=document.getElementById('tk'+i);if(cv&&t.wave)drawMini(cv,t.wave,'var(--green)');});
-    },50);
+      (r.takes||[]).forEach((t,i)=>{const cv=document.getElementById('tk'+i);
+      if(!cv)return;
+      const W=cv.getBoundingClientRect().width||cv.parentElement?.clientWidth||cv.parentElement?.offsetWidth||300;
+      cv.width=Math.max(W,100);cv.height=36;
+      if(t.wave&&t.wave.length>2){
+        drawMini(cv,t.wave,'#FFFFFF');
+      } else {
+        const cx=cv.getContext('2d');
+        cx.fillStyle='#2C2C2E';cx.fillRect(0,0,cv.width,36);
+        cx.fillStyle='#8E8E93';cx.font='12px sans-serif';
+        cx.textAlign='center';cx.textBaseline='middle';
+        cx.fillText(fmtT(t.dur||0),cv.width/2,18);
+      }
+    });
+    },400);
   }
   // Dictaphone takes
   if(r.source==='dictaphone'){
@@ -1769,7 +1782,7 @@ function drawMini(cv,wave,col){
   // White bars
   wave.forEach((v,i)=>{
     const amp=Math.max(0.04,v);
-    const h=Math.max(3,Math.min(H-4,amp*(H-4)*1.8));
+    const h=Math.max(3,Math.min(H-4,amp*(H-4)*2.5));
     const x=i*bw+0.5;
     const y=(H-h)/2;
     ctx.fillStyle=col||'#FFFFFF';
@@ -1844,9 +1857,9 @@ function makeIR(actx,type){
   // Exponential decay — sounds natural
   // RT60 values: Room=0.3s, Hall=1.2s, Plate=0.6s
   const cfg={
-    Room: {rt60:0.3, pre:0.008, lpf:0.55, density:0.85},
-    Hall: {rt60:1.2, pre:0.025, lpf:0.75, density:0.70},
-    Plate:{rt60:0.6, pre:0.002, lpf:0.65, density:0.92}
+    Room: {rt60:0.3, pre:0.008, lpf:0.25, density:0.85},
+    Hall: {rt60:1.2, pre:0.025, lpf:0.45, density:0.70},
+    Plate:{rt60:0.6, pre:0.002, lpf:0.35, density:0.92}
   }[type]||{rt60:0.3,pre:0.008,lpf:0.55,density:0.85};
 
   const sr=actx.sampleRate;
@@ -1888,9 +1901,10 @@ function playBufWithFX(buf,offset){
     fs.reduce((a,b)=>{a.connect(b);return b;},node);node=fs[fs.length-1];
   }
   if(revOn){
-    const dw=+(document.getElementById('dw-knob')?.value||70);
-    const dg=ctx.createGain();dg.gain.value=dw/100;
-    const wg=ctx.createGain();wg.gain.value=(100-dw)/100;
+    const dw=+(document.getElementById('dw-knob')?.value||30);
+    const wetRatio=dw/100;
+    const dg=ctx.createGain();dg.gain.value=1-wetRatio; // dry
+    const wg=ctx.createGain();wg.gain.value=wetRatio;   // wet
     const conv=ctx.createConvolver();conv.buffer=makeIR(ctx,revType);
     node.connect(dg);node.connect(conv);conv.connect(wg);dg.connect(dest);wg.connect(dest);
   }else{node.connect(dest);}
@@ -2052,8 +2066,8 @@ function exportWAV(mode='raw'){
   }
   if((mode==='reverb'||mode==='all')&&revOn){
     const _wetEx=+(document.getElementById('dw-knob')?.value||30)/100;
-    const dg=offCtx.createGain();dg.gain.value=1-_wetEx;
-    const wg=offCtx.createGain();wg.gain.value=_wetEx;
+    const dg=offCtx.createGain();dg.gain.value=1-_wetEx; // dry
+    const wg=offCtx.createGain();wg.gain.value=_wetEx;   // wet
     const conv=offCtx.createConvolver();conv.buffer=makeIR(offCtx,revType);
     node.connect(dg);node.connect(conv);conv.connect(wg);
     dg.connect(offCtx.destination);wg.connect(offCtx.destination);
@@ -3404,13 +3418,14 @@ function startGRMeter(comp){
   _liveComp=comp;
   clearInterval(_grInterval);
   _grInterval=setInterval(()=>{
-    if(!_liveComp||!compOn){clearInterval(_grInterval);return;}
+    if(!_liveComp){return;}
     const gr=Math.abs(_liveComp.reduction||0);
     const bar=document.getElementById('comp-gr-bar');
     const val=document.getElementById('comp-gr-val');
+    // Scale: 0dB=0%, -20dB=100%
     if(bar)bar.style.width=Math.min(gr/20*100,100)+'%';
-    if(val)val.textContent='-'+gr.toFixed(1)+' dB';
-  },80);
+    if(val)val.textContent=(gr>0.1?'-'+gr.toFixed(1)+' dB':'0 dB');
+  },50);
 }
 function toggleCompBands(){
   const w=document.getElementById('comp-bands-wrap');const b=document.getElementById('comp-bands-btn');
