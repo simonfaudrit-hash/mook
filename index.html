@@ -984,6 +984,7 @@ input[type=number] {
         <div class="sec">Data</div>
         <div style="font-size:13px;color:var(--t3);margin-bottom:10px">All data saved locally in your browser.</div>
         <button class="btn danger" style="gap:7px" onclick="showConfirm('Clear all data? This cannot be undone.',()=>{localStorage.removeItem('mook1');DB=[];CID=null;renderList();
+checkAudioUnlock();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -1021,6 +1022,39 @@ DB.forEach(r=>{
   </div>
   </div>
 </div>
+
+
+  <!-- iOS Audio Unlock Overlay -->
+  <div id="audio-unlock" style="
+    display:none;position:fixed;inset:0;z-index:9999;
+    background:rgba(0,0,0,.92);
+    flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  ">
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+      <circle cx="32" cy="32" r="30" stroke="#FF3B30" stroke-width="2" fill="none" opacity=".3"/>
+      <circle cx="32" cy="32" r="22" stroke="#FF3B30" stroke-width="1.5" fill="none" opacity=".5"/>
+      <rect x="22" y="14" width="20" height="26" rx="10" stroke="white" stroke-width="2" fill="none"/>
+      <path d="M14 32a18 18 0 0 0 36 0" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <line x1="32" y1="50" x2="32" y2="58" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <line x1="22" y1="58" x2="42" y2="58" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:#fff">
+      ENABLE AUDIO
+    </div>
+    <div style="font-size:14px;color:#8E8E93;text-align:center;max-width:260px;line-height:1.5;font-family:-apple-system,sans-serif">
+      Tap to enable audio playback on this device
+    </div>
+    <button onclick="doUnlockAudio()" style="
+      min-width:200px;min-height:56px;border-radius:28px;
+      background:#FF3B30;border:none;cursor:pointer;
+      font-family:'Bebas Neue',sans-serif;font-size:22px;
+      letter-spacing:1px;color:#fff;
+      box-shadow:0 0 30px rgba(255,59,48,.4);
+    ">TAP TO START</button>
+    <div style="font-size:11px;color:#636366;font-family:-apple-system,sans-serif">
+      Required once by iOS Safari
+    </div>
+  </div>
 
 <div id="toast"></div>
 <audio id="mook-player" preload="auto" style="display:none"></audio>
@@ -1082,6 +1116,7 @@ function toggleSettings(){
 function setFilter(btn){
   document.querySelectorAll('#p-notebook .pill').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');FM=btn.dataset.f;renderList();
+checkAudioUnlock();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -1153,6 +1188,7 @@ function autoSave(){
     r.notes=document.getElementById('d-notes')?.value||'';
     if(r.source==='dictaphone'){r.dictRef=document.getElementById('d-ref')?.value||'';}
     save();renderList();
+checkAudioUnlock();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -1169,6 +1205,7 @@ DB.forEach(r=>{
 }
 function setStatut(s){
   const r=DB.find(d=>d.id===CID);if(!r)return;r.statut=s;save();renderDetail();renderList();
+checkAudioUnlock();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -1191,6 +1228,7 @@ function deleteRec(id){
   DB=DB.filter(d=>d.id!==id);
   DB.forEach(d=>{d.linkedIds=(d.linkedIds||[]).filter(v=>v!==id);});
   save();CID=null;renderList();
+checkAudioUnlock();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -1519,9 +1557,7 @@ function finishRec(){
   window._sessionBlobs[idbKey]=blob;
   const url=URL.createObjectURL(blob);
   r.takes[takeIdx].url=url;
-  // Pre-load into persistent player so it's ready immediately
-  const player=document.getElementById('mook-player');
-  if(player){player.src=url;player.load();}
+  // URL stored for playback
   idbSave(idbKey,blob).then(()=>{
     // Use analyser snapshot for waveform — no decodeAudioData needed
     // This avoids the WebM/Opus decoding issue on iOS Safari
@@ -1858,17 +1894,10 @@ function playAudio(){
 }
 
 function playViaMediaElement(url){
-  const player=document.getElementById('mook-player');
-  player.pause();
-  player.src=url;
-  player.volume=1.0;
-  player.currentTime=0;
-  _currentAudio=player;
-  player.load();
-  player.play().then(()=>toast('▶ Playing')).catch(e=>{
-    console.warn('studio play:',e.message);
-    toast('▶ Playing');
-  });
+  if(_currentAudio){try{_currentAudio.pause();}catch(e){}}
+  _currentAudio=new Audio(url);
+  _currentAudio.volume=1.0;
+  _currentAudio.play().then(()=>toast('▶ Playing')).catch(e=>console.warn('play:',e));
 }
 function stopAudio(){if(sourceNode){try{sourceNode.stop();}catch(e){}}sourceNode=null;isPlaying=false;cancelAnimationFrame(phAnim);pbOff=0;const ph=document.getElementById('wv-ph');if(ph)ph.style.left='0';}
 function loadAudio(url,dur){
@@ -3412,6 +3441,7 @@ function swipeEnd(e,id){
       DB=DB.filter(x=>x.id!==id);
       if(CID===id)CID=null;
       save();renderList();
+checkAudioUnlock();
     });
   } else {
     resetSwipe(id);
@@ -3472,10 +3502,52 @@ async function unlockAudio(){
   document.addEventListener(evt, unlockAudio, {once: false, passive: true});
 });
 
+
+// ══════════════════════════════════════
+// IOS AUDIO UNLOCK
+// ══════════════════════════════════════
+let _audioUnlocked = localStorage.getItem('mook_audio_unlocked') === '1';
+
+function checkAudioUnlock(){
+  if(_audioUnlocked) return;
+  // Show overlay after short delay so app renders first
+  setTimeout(()=>{
+    const el = document.getElementById('audio-unlock');
+    if(el) el.style.display = 'flex';
+  }, 800);
+}
+
+function doUnlockAudio(){
+  const el = document.getElementById('audio-unlock');
+  if(el) el.style.display = 'none';
+  // Play silent audio to unlock iOS
+  const ctx = getCtx();
+  ctx.resume().then(()=>{
+    const buf = ctx.createBuffer(1,1,22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    // Also unlock HTML Audio
+    const a = new Audio();
+    a.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+    a.volume = 0;
+    a.play().then(()=>{
+      _audioUnlocked = true;
+      localStorage.setItem('mook_audio_unlocked','1');
+      toast('Audio enabled ✓');
+    }).catch(()=>{
+      _audioUnlocked = true;
+      localStorage.setItem('mook_audio_unlocked','1');
+    });
+  });
+}
+
 // ══════════════════════════════════════
 // INIT
 // ══════════════════════════════════════
 renderList();
+checkAudioUnlock();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
