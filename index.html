@@ -1562,44 +1562,26 @@ const _takeBufs={};
 function finishRec(){
   const blob=new Blob(recChunks,{type:'audio/webm'});
   const r=DB.find(d=>d.id===CID);if(!r)return;
-  // Fallback: use _recBars if _waveAcc is empty
-  const waveSnap=_waveAcc.length>2?getWaveSnap():(_recBars.length>2?[..._recBars].slice(-80):Array(60).fill(0.1));
-  console.log('waveSnap length:',waveSnap.length,'_waveAcc:',_waveAcc.length,'_recBars:',_recBars.length);
+  const waveSnap=_waveAcc.length>2?getWaveSnap():(_recBars.length>2?[..._recBars].slice(-80):Array(60).fill(0.05));
   const takeIdx=(r.takes||[]).length;
   r.takes=r.takes||[];
   const idbKey=takeKey(CID,takeIdx);
   r.takes.push({idbKey,dur:recSec,wave:waveSnap,date:new Date().toLocaleDateString('en-GB')});
-  save();
-
-  // Save blob to IndexedDB for persistence
-  // Keep blob reference and pre-create Audio element
+  // Store blob for playback
   window._sessionBlobs=window._sessionBlobs||{};
   window._sessionBlobs[idbKey]=blob;
   const url=URL.createObjectURL(blob);
   r.takes[takeIdx].url=url;
-  // URL stored for playback
-  idbSave(idbKey,blob).then(()=>{
-    // Use analyser snapshot for waveform — no decodeAudioData needed
-    // This avoids the WebM/Opus decoding issue on iOS Safari
-    {const buf=null;if(false){
-    // wave already captured by getWaveSnap() above
-    save();
-    const cv=document.getElementById('tk'+takeIdx);
-    if(cv){cv.width=cv.parentElement?.clientWidth||300;cv.height=36;drawMini(cv,r.takes[takeIdx].wave,'#fff');}
-    }if(false){}}// end dummy block
-  }).catch(()=>toast('Storage error'));
-
-  // Draw waveform immediately after a short delay
+  save();
+  // Save to IndexedDB
+  idbSave(idbKey,blob).catch(()=>toast('Storage error'));
+  // Refresh UI
   renderDetail();
-  // Draw new take waveform with retry
-  let _newWaveAttempts=0;
-  const _drawNewWave=()=>{
+  // Draw waveform after DOM update
+  setTimeout(()=>{
     const el=document.getElementById('tk'+takeIdx);
-    if(!el){if(_newWaveAttempts++<10)setTimeout(_drawNewWave,200);return;}
-    if(waveSnap&&waveSnap.length>2) drawMini(el,waveSnap,'#fff');
-    else{el.style.justifyContent='center';el.innerHTML='<span style="font-size:12px;color:#8E8E93">'+fmtT(r.takes[takeIdx]?.dur||0)+'</span>';}
-  };
-  setTimeout(_drawNewWave,400);
+    if(el&&waveSnap.length>2) drawMini(el,waveSnap,'#fff');
+  },400);
   toast('Take saved!');
 }
 // Rolling waveform accumulator during recording
