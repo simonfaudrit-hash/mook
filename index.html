@@ -1389,9 +1389,8 @@ function renderDetail(){
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="1,3.5 13,3.5" stroke="#FF3B30" stroke-width="1.4" stroke-linecap="round"/><path d="M4.5 3.5V2.2a.5.5 0 01.5-.5h3.5a.5.5 0 01.5.5v1.3M5 6v5M9 6v5" stroke="#FF3B30" stroke-width="1.4" stroke-linecap="round"/><path d="M2.5 3.5l.8 7.3a1 1 0 001 .9h5.4a1 1 0 001-.9l.8-7.3" stroke="#FF3B30" stroke-width="1.4" stroke-linecap="round"/></svg>
         </button>
       </div>
-      <canvas id="tk${i}" width="300" height="36"
-        style="width:100%;border-radius:8px;background:#2C2C2E;cursor:pointer;display:block"
-        onclick="loadTakeEditor(${i});showPanel('studio')" title="Open in Studio"></canvas>
+      <div id="tk${i}" onclick="loadTakeEditor(${i});showPanel('studio')" title="Open in Studio"
+        style="width:100%;height:36px;border-radius:8px;background:#2C2C2E;cursor:pointer;display:flex;align-items:center;gap:1px;padding:0 2px;box-sizing:border-box;overflow:hidden"></div>
     </div>`).join(''):'<div style="font-size:13px;color:var(--t3)">No takes yet.</div>';
 
 
@@ -1460,13 +1459,10 @@ function renderDetail(){
       const W=cv.getBoundingClientRect().width||cv.parentElement?.clientWidth||cv.parentElement?.offsetWidth||300;
       cv.width=Math.max(W,100);cv.height=36;
       if(t.wave&&t.wave.length>2){
-        drawMini(cv,t.wave,'#FFFFFF');
+        drawMini(el,t.wave,'#fff');
       } else {
-        const cx=cv.getContext('2d');
-        cx.fillStyle='#2C2C2E';cx.fillRect(0,0,cv.width,36);
-        cx.fillStyle='#8E8E93';cx.font='12px sans-serif';
-        cx.textAlign='center';cx.textBaseline='middle';
-        cx.fillText(fmtT(t.dur||0),cv.width/2,18);
+        el.style.justifyContent='center';
+        el.innerHTML=`<span style="font-size:12px;color:#8E8E93">${fmtT(t.dur||0)}</span>`;
       }
     });
     },400);
@@ -1598,12 +1594,10 @@ function finishRec(){
   // Draw new take waveform with retry
   let _newWaveAttempts=0;
   const _drawNewWave=()=>{
-    const cv=document.getElementById('tk'+takeIdx);
-    if(!cv){if(_newWaveAttempts++<10)setTimeout(_drawNewWave,200);return;}
-    const W=cv.getBoundingClientRect().width||cv.offsetWidth||cv.parentElement?.offsetWidth||0;
-    if(W<10){if(_newWaveAttempts++<10)setTimeout(_drawNewWave,200);return;}
-    cv.width=Math.round(W);cv.height=36;
-    if(waveSnap&&waveSnap.length>2) drawMini(cv,waveSnap,'#FFFFFF');
+    const el=document.getElementById('tk'+takeIdx);
+    if(!el){if(_newWaveAttempts++<10)setTimeout(_drawNewWave,200);return;}
+    if(waveSnap&&waveSnap.length>2) drawMini(el,waveSnap,'#fff');
+    else{el.style.justifyContent='center';el.innerHTML='<span style="font-size:12px;color:#8E8E93">'+fmtT(r.takes[takeIdx]?.dur||0)+'</span>';}
   };
   setTimeout(_drawNewWave,400);
   toast('Take saved!');
@@ -1774,28 +1768,28 @@ function loadTakeEditor(i){
     }
   },100);
 }
-function drawMini(cv,wave,col){
-  const ctx=cv.getContext('2d');
-  const W=cv.width||300, H=cv.height||36;
-  ctx.clearRect(0,0,W,H);
+function drawMini(el,wave,col){
+  if(!el)return;
+  // If it's a canvas, use old method; if div, use bars
+  if(el.tagName==='CANVAS'){
+    const ctx=el.getContext('2d');
+    const W=el.width||300,H=el.height||36;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#2C2C2E';ctx.fillRect(0,0,W,H);
+    const bw=W/(wave.length||60);
+    wave.forEach((v,i)=>{
+      const h=Math.max(3,Math.min(H-4,Math.max(0.04,v)*(H-4)*2.5));
+      ctx.fillStyle=col||'#fff';
+      ctx.fillRect(i*bw,( H-h)/2,Math.max(1,bw-0.5),h);
+    });
+    return;
+  }
+  // DIV-based waveform — pure HTML, no sizing issues
   const n=wave.length||60;
-  const bw=W/n;
-  // Dark background
-  ctx.fillStyle='#2C2C2E';
-  ctx.roundRect?ctx.roundRect(0,0,W,H,6):ctx.rect(0,0,W,H);
-  ctx.fill();
-  // White bars
-  wave.forEach((v,i)=>{
-    const amp=Math.max(0.04,v);
-    const h=Math.max(3,Math.min(H-4,amp*(H-4)*2.5));
-    const x=i*bw+0.5;
-    const y=(H-h)/2;
-    ctx.fillStyle=col||'#FFFFFF';
-    ctx.beginPath();
-    if(ctx.roundRect)ctx.roundRect(x,y,Math.max(1,bw-1),h,1);
-    else ctx.rect(x,y,Math.max(1,bw-1),h);
-    ctx.fill();
-  });
+  el.innerHTML=wave.map(v=>{
+    const pct=Math.max(4,Math.min(100,Math.max(0.04,v)*100*2.5));
+    return `<div style="flex:1;height:${pct}%;background:${col||'#fff'};border-radius:1px;min-width:1px"></div>`;
+  }).join('');
 }
 
 // ══════════════════════════════════════
