@@ -1858,35 +1858,65 @@ function toggleRev(){revOn=!revOn;const t=document.getElementById('rev-tog');con
 function setRevType(btn){revType=btn.dataset.rt;document.querySelectorAll('.rt').forEach(b=>b.classList.toggle('on',b.dataset.rt===revType));}
 function updDW(v){const l=document.getElementById('dw-lbl');if(l)l.textContent=v+'%';}
 function makeIR(actx,type){
-  // Exponential decay — sounds natural
-  // RT60 values: Room=0.3s, Hall=1.2s, Plate=0.6s
+  // Acoustic IR simulation based on real reverb characteristics
   const cfg={
-    Room: {rt60:0.3, pre:0.008, lpf:0.25, density:0.85},
-    Hall: {rt60:1.2, pre:0.025, lpf:0.45, density:0.70},
-    Plate:{rt60:0.6, pre:0.002, lpf:0.35, density:0.92}
-  }[type]||{rt60:0.3,pre:0.008,lpf:0.55,density:0.85};
+    // Room: small treated studio, RT60~0.3s, warm, close reflections
+    Room: {
+      rt60:0.3, pre:0.008, lpf:0.22, hpf:0.02,
+      density:0.85, earlyAmp:0.6, earlyCount:8
+    },
+    // Hall: large concert hall, RT60~1.8s, rich early reflections, slow build
+    Hall: {
+      rt60:1.8, pre:0.028, lpf:0.40, hpf:0.01,
+      density:0.75, earlyAmp:0.5, earlyCount:20
+    },
+    // Plate: steel plate reverb, RT60~2.5s, bright, dense, no early reflections
+    Plate:{
+      rt60:2.5, pre:0.001, lpf:0.10, hpf:0.04,
+      density:0.98, earlyAmp:0.0, earlyCount:0
+    }
+  }[type]||{rt60:0.3,pre:0.008,lpf:0.22,hpf:0.02,density:0.85,earlyAmp:0.6,earlyCount:8};
 
   const sr=actx.sampleRate;
   const preLen=Math.round(sr*cfg.pre);
-  const tailLen=Math.round(sr*cfg.rt60*3); // full decay buffer
+  const tailLen=Math.round(sr*cfg.rt60*3.5);
   const buf=actx.createBuffer(2,preLen+tailLen,sr);
 
   for(let ch=0;ch<2;ch++){
     const d=buf.getChannelData(ch);
-    // Pre-delay
+    // Pre-delay silence
     for(let i=0;i<preLen;i++) d[i]=0;
-    // Exponential decay: amplitude = e^(-6.91*t/RT60)
+
+    // Early reflections (room/hall character)
+    if(cfg.earlyCount>0){
+      for(let r=0;r<cfg.earlyCount;r++){
+        const pos=Math.round(preLen + sr*(0.005+r*0.004+Math.random()*0.003));
+        if(pos<d.length){
+          const amp=cfg.earlyAmp*Math.exp(-r*0.25)*(Math.random()>0.5?1:-1);
+          d[pos]+=amp;
+        }
+      }
+    }
+
+    // Late reverb tail — exponential decay
     for(let i=0;i<tailLen;i++){
       const t=i/sr;
       const env=Math.exp(-6.91*t/cfg.rt60);
-      d[preLen+i]=(Math.random()*2-1)*env*cfg.density;
+      // Plate: very dense uniform noise; Hall/Room: slightly sparser
+      d[preLen+i]+=(Math.random()*2-1)*env*cfg.density;
     }
-    // Gentle low-pass for warmth (weighted moving average)
+
+    // High-pass (removes low-freq rumble — important for plate brightness)
+    const hp=cfg.hpf;
+    for(let i=1;i<d.length;i++) d[i]=d[i]*(1-hp)+d[i-1]*(-hp);
+
+    // Low-pass (warmth/air absorption — plate keeps more highs)
     const lp=cfg.lpf;
     for(let i=1;i<d.length;i++) d[i]=d[i]*(1-lp)+d[i-1]*lp;
+
     // Normalize
     let mx=0;for(let i=0;i<d.length;i++) if(Math.abs(d[i])>mx)mx=Math.abs(d[i]);
-    if(mx>0) for(let i=0;i<d.length;i++) d[i]/=mx*1.2;
+    if(mx>0) for(let i=0;i<d.length;i++) d[i]/=mx*1.15;
   }
   return buf;
 }
