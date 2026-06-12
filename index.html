@@ -1492,59 +1492,36 @@ async function startRec(){
       sampleRate:48000,
       channelCount:1
     }});
+
+    // Analyser only — no processing nodes, no dest stream
     const actx=new AudioContext({sampleRate:48000});
     const micSrc=actx.createMediaStreamSource(recStream);
+    recAnalyser=actx.createAnalyser();
+    recAnalyser.fftSize=1024;
+    micSrc.connect(recAnalyser);
 
-    // Signal chain: Mic → Gain → Compressor → Limiter → Analyser → Recorder
-    const inputGain=actx.createGain();inputGain.gain.value=1.0;
-
-    const comp=actx.createDynamicsCompressor();
-    comp.threshold.value=-12;comp.knee.value=15;
-    comp.ratio.value=2;comp.attack.value=0.01;comp.release.value=0.15;
-
-    // Makeup gain to boost quiet sounds after compression
-    const makeupGain=actx.createGain();makeupGain.gain.value=1.0;
-
-    const limiter=actx.createDynamicsCompressor();
-    limiter.threshold.value=-3;limiter.knee.value=0;
-    limiter.ratio.value=20;limiter.attack.value=0.001;limiter.release.value=0.1;
-
-    recAnalyser=actx.createAnalyser();recAnalyser.fftSize=1024;
-
-    micSrc.connect(inputGain);
-    inputGain.connect(comp);
-    comp.connect(makeupGain);
-    makeupGain.connect(limiter);
-    limiter.connect(recAnalyser);
-
-    // Record from processed stream
-    const dest=actx.createMediaStreamDestination();
-    limiter.connect(dest);
+    // Record directly from mic stream — no re-encoding
     recChunks=[];
-    // Best quality settings
+    _waveAcc=[];
     let options={};
-    const formats=[
-      'audio/webm;codecs=pcm',
-      'audio/wav',
-      'audio/webm;codecs=opus',
-      'audio/ogg;codecs=opus',
-      'audio/mp4',
-      'audio/webm',
-    ];
-    for(const f of formats){
-      if(MediaRecorder.isTypeSupported(f)){options.mimeType=f;break;}
-    }
-    // Only set bitrate for compressed formats
-    if(!options.mimeType||!options.mimeType.includes('pcm')&&!options.mimeType.includes('wav')){
+    const formats=['audio/webm;codecs=pcm','audio/wav','audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4','audio/webm'];
+    for(const f of formats){if(MediaRecorder.isTypeSupported(f)){options.mimeType=f;break;}}
+    if(!options.mimeType||(!options.mimeType.includes('pcm')&&!options.mimeType.includes('wav'))){
       options.audioBitsPerSecond=256000;
     }
     console.log('Recording:',options.mimeType||'default');
-    _waveAcc=[];
+
     mediaRec=new MediaRecorder(recStream,options);
-    mediaRec.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};
-    mediaRec.onstop=finishRec;mediaRec.start(100);recState='recording';recSec=0;
-    recTimer=setInterval(()=>{recSec++;updRecUI();},1000);updRecUI();drawLive();
-  }catch(e){toast('Microphone access denied — HTTPS required on iPhone');}
+    mediaRec.ondataavailable=e=>{if(e.data&&e.data.size>0)recChunks.push(e.data);};
+    mediaRec.onstop=()=>{console.log('mediaRec.onstop fired, chunks:',recChunks.length);finishRec();};
+    mediaRec.start(100);
+    recState='recording';recSec=0;
+    recTimer=setInterval(()=>{recSec++;updRecUI();},1000);
+    updRecUI();drawLive();
+  }catch(e){
+    console.error('startRec error:',e);
+    toast('Microphone access denied — HTTPS required on iPhone');
+  }
 }
 function pauseRec(){
   if(recState==='recording'){mediaRec.pause();recState='paused';clearInterval(recTimer);updRecUI();}
@@ -1553,9 +1530,15 @@ function pauseRec(){
 function stopRec(){
   if(recState==='idle')return;
   clearInterval(recTimer);cancelAnimationFrame(recAnimF);
-  if(mediaRec&&mediaRec.state!=='inactive')mediaRec.stop();
-  recStream&&recStream.getTracks().forEach(t=>t.stop());
   recState='idle';updRecUI();
+  // Stop tracks AFTER mediaRec.stop() — onstop needs them alive
+  if(mediaRec&&mediaRec.state!=='inactive'){
+    mediaRec.stop(); // triggers onstop → finishRec
+  }
+  // Delay track stop so onstop can fire and collect last chunk
+  setTimeout(()=>{
+    recStream&&recStream.getTracks().forEach(t=>t.stop());
+  },300);
 }
 // In-memory buffer store for takes (not persisted, only for current session)
 const _takeBufs={};
