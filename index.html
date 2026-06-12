@@ -1757,19 +1757,23 @@ function drawMini(el,wave,col){
   cv.width=W; cv.height=H;
   const ctx=cv.getContext('2d');
   ctx.clearRect(0,0,W,H);
-  // Same style as Studio waveform
-  const bars=Math.floor(W/3);
-  const step=Math.max(1,Math.floor(wave.length/bars));
+  // Match Studio density: bars every 3px, interpolate wave data
+  const barW=2, gap=1, total=barW+gap;
+  const bars=Math.floor(W/total);
+  const n=wave.length;
   for(let i=0;i<bars;i++){
-    let mx=0;
-    for(let s=0;s<step;s++){const v=wave[Math.min(i*step+s,wave.length-1)]||0;if(v>mx)mx=v;}
-    const h=Math.max(2,mx*(H-4)*2.5);
-    const x=i*(W/bars);
+    // Interpolate — sample wave at fractional position
+    const pos=(i/bars)*n;
+    const lo=Math.floor(pos), hi=Math.min(Math.ceil(pos),n-1);
+    const frac=pos-lo;
+    const v=(wave[lo]||0)*(1-frac)+(wave[hi]||0)*frac;
+    const h=Math.max(2,v*(H-4)*2.5);
+    const x=i*total;
     const y=(H-h)/2;
     ctx.fillStyle=col||'rgba(255,255,255,0.85)';
     ctx.beginPath();
-    if(ctx.roundRect)ctx.roundRect(x,y,Math.max(1,(W/bars)-0.5),h,1);
-    else ctx.rect(x,y,Math.max(1,(W/bars)-0.5),h);
+    if(ctx.roundRect)ctx.roundRect(x,y,barW,h,1);
+    else ctx.rect(x,y,barW,h);
     ctx.fill();
   }
 }
@@ -1896,7 +1900,7 @@ function playBufWithFX(buf,offset){
   }
   if(revOn){
     const dw=+(document.getElementById('dw-knob')?.value||30);
-    const wetRatio=(100-dw)/100; // slider left=Dry(0%), right=Wet(100%)
+    const wetRatio=dw/100; // slider value = wet%
     const dg=ctx.createGain();dg.gain.value=1-wetRatio; // dry
     const wg=ctx.createGain();wg.gain.value=wetRatio;   // wet
     const conv=ctx.createConvolver();conv.buffer=makeIR(ctx,revType);
@@ -2059,7 +2063,7 @@ function exportWAV(mode='raw'){
     filters.reduce((a,b)=>{a.connect(b);return b;},node);node=filters[filters.length-1];
   }
   if((mode==='reverb'||mode==='all')&&revOn){
-    const _wetEx=(100-(+(document.getElementById('dw-knob')?.value||30)))/100;
+    const _wetEx=+(document.getElementById('dw-knob')?.value||30)/100;
     const dg=offCtx.createGain();dg.gain.value=1-_wetEx;
     const wg=offCtx.createGain();wg.gain.value=_wetEx;
     const conv=offCtx.createConvolver();conv.buffer=makeIR(offCtx,revType);
