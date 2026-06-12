@@ -1401,7 +1401,7 @@ function renderDetail(){
         </button>
       </div>
       <div id="tk${i}" onclick="loadTakeEditor(${i});showPanel('studio')" title="Open in Studio"
-        style="width:100%;height:36px;border-radius:8px;background:#2C2C2E;cursor:pointer;display:flex;align-items:center;gap:1px;padding:0 2px;box-sizing:border-box;overflow:hidden"></div>
+        style="width:100%;height:72px;border-radius:8px;background:#2C2C2E;cursor:pointer;overflow:hidden"></div>
     </div>`).join(''):'<div style="font-size:13px;color:var(--t3)">No takes yet.</div>';
 
 
@@ -1753,7 +1753,7 @@ function drawMini(el,wave,col){
     el.appendChild(cv);
   }
   const W=el.offsetWidth||el.parentElement?.offsetWidth||300;
-  const H=36;
+  const H=el.offsetHeight||72;
   cv.width=W; cv.height=H;
   const ctx=cv.getContext('2d');
   ctx.clearRect(0,0,W,H);
@@ -1894,6 +1894,18 @@ function playBufWithFX(buf,offset){
   const ctx=getCtx();if(sourceNode){try{sourceNode.stop();}catch(e){}}
   sourceNode=ctx.createBufferSource();sourceNode.buffer=buf;
   const dest=ctx.destination;let node=sourceNode;
+  if(compOn){
+    const cs=getCompSettings();
+    const comp=ctx.createDynamicsCompressor();
+    comp.threshold.value=cs.threshold;
+    comp.ratio.value=cs.ratio;
+    comp.attack.value=cs.attack/1000;
+    comp.release.value=cs.release/1000;
+    comp.knee.value=cs.knee;
+    const mkup=ctx.createGain();mkup.gain.value=Math.pow(10,cs.gain/20);
+    node.connect(comp);comp.connect(mkup);node=mkup;
+    startGRMeter(comp);
+  }
   if(eqOn&&gains.some(g=>g!==0)){
     const fs=EQ_BANDS.map((b,i)=>{const f=ctx.createBiquadFilter();f.type=i===0?'lowshelf':i===7?'highshelf':'peaking';f.frequency.value=b.freq;f.gain.value=gains[i];f.Q.value=1.2;return f;});
     fs.reduce((a,b)=>{a.connect(b);return b;},node);node=fs[fs.length-1];
