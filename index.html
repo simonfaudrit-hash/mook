@@ -1761,13 +1761,17 @@ function drawMini(el,wave,col){
   const barW=2, gap=1, total=barW+gap;
   const bars=Math.floor(W/total);
   const n=wave.length;
+  // Find max value to normalize
+  let maxV=0; for(let i=0;i<n;i++) if(wave[i]>maxV) maxV=wave[i];
+  if(maxV<0.001) maxV=1;
   for(let i=0;i<bars;i++){
-    // Interpolate — sample wave at fractional position
     const pos=(i/bars)*n;
     const lo=Math.floor(pos), hi=Math.min(Math.ceil(pos),n-1);
     const frac=pos-lo;
     const v=(wave[lo]||0)*(1-frac)+(wave[hi]||0)*frac;
-    const h=Math.max(2,v*(H-4)*2.5);
+    // Normalize to max then scale to fill canvas height like Studio
+    const norm=v/maxV;
+    const h=Math.max(2, norm*(H-4)*0.9);
     const x=i*total;
     const y=(H-h)/2;
     ctx.fillStyle=col||'rgba(255,255,255,0.85)';
@@ -1899,8 +1903,8 @@ function playBufWithFX(buf,offset){
     const comp=ctx.createDynamicsCompressor();
     comp.threshold.value=cs.threshold;
     comp.ratio.value=cs.ratio;
-    comp.attack.value=cs.attack/1000;
-    comp.release.value=cs.release/1000;
+    comp.attack.value=cs.attack;   // already in seconds from getCompSettings
+    comp.release.value=cs.release; // already in seconds from getCompSettings
     comp.knee.value=cs.knee;
     const mkup=ctx.createGain();mkup.gain.value=Math.pow(10,cs.gain/20);
     node.connect(comp);comp.connect(mkup);node=mkup;
