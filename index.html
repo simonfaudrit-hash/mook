@@ -1608,8 +1608,10 @@ function drawLive(){
     const buf=new Uint8Array(recAnalyser.fftSize);
     recAnalyser.getByteTimeDomainData(buf);
     let rms=0;for(let i=0;i<buf.length;i++)rms+=Math.pow((buf[i]-128)/128,2);
-    const ampVal=Math.sqrt(rms/buf.length);
-    _waveAcc.push(Math.min(1,ampVal*20)); // accumulate for take waveform
+    // Use peak detection — gives same visual as Studio PCM peaks
+    let peak=0;
+    for(let i=0;i<buf.length;i++){const v=Math.abs((buf[i]-128)/128);if(v>peak)peak=v;}
+    _waveAcc.push(Math.min(1,peak));
     const amp=Math.sqrt(rms/buf.length);
     _recBars.push(Math.max(0.04,amp*10));
     if(_recBars.length>_maxBars)_recBars.shift();
@@ -1907,7 +1909,11 @@ function playBufWithFX(buf,offset){
     comp.release.value=cs.release; // already in seconds from getCompSettings
     comp.knee.value=cs.knee;
     const mkup=ctx.createGain();mkup.gain.value=Math.pow(10,cs.gain/20);
-    node.connect(comp);comp.connect(mkup);node=mkup;
+    // Hard limiter after makeup to prevent clipping
+    const lim=ctx.createDynamicsCompressor();
+    lim.threshold.value=-1;lim.knee.value=0;
+    lim.ratio.value=20;lim.attack.value=0.001;lim.release.value=0.1;
+    node.connect(comp);comp.connect(mkup);mkup.connect(lim);node=lim;
     startGRMeter(comp);
   }
   if(eqOn&&gains.some(g=>g!==0)){
