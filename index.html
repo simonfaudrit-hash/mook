@@ -1115,7 +1115,11 @@ function toggleSettings(){
 // ══════════════════════════════════════
 function setFilter(btn){
   document.querySelectorAll('#p-notebook .pill').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');FM=btn.dataset.f;renderList();
+  btn.classList.add('on');FM=btn.dataset.f;window.onerror=function(msg,src,line,col,err){console.error('GLOBAL ERROR:',msg,'line:',line,'col:',col,err?.stack);return false;};
+window.addEventListener('unhandledrejection',e=>console.error('UNHANDLED PROMISE:',e.reason));
+window.onerror=function(m,s,l,co,e){console.error('ERR:',m,'@line',l,e&&e.stack||'');return false;};
+window.addEventListener('unhandledrejection',e=>console.error('PROMISE:',e.reason));
+renderList();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -1186,7 +1190,9 @@ function autoSave(){
     r.paroles=document.getElementById('d-paroles')?.value||'';
     r.notes=document.getElementById('d-notes')?.value||'';
     if(r.source==='dictaphone'){r.dictRef=document.getElementById('d-ref')?.value||'';}
-    save();renderList();
+    save();window.onerror=function(msg,src,line,col,err){console.error('GLOBAL ERROR:',msg,'line:',line,'col:',col,err?.stack);return false;};
+window.addEventListener('unhandledrejection',e=>console.error('UNHANDLED PROMISE:',e.reason));
+renderList();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -1202,7 +1208,9 @@ DB.forEach(r=>{
   },600);
 }
 function setStatut(s){
-  const r=DB.find(d=>d.id===CID);if(!r)return;r.statut=s;save();renderDetail();renderList();
+  const r=DB.find(d=>d.id===CID);if(!r)return;r.statut=s;save();renderDetail();window.onerror=function(msg,src,line,col,err){console.error('GLOBAL ERROR:',msg,'line:',line,'col:',col,err?.stack);return false;};
+window.addEventListener('unhandledrejection',e=>console.error('UNHANDLED PROMISE:',e.reason));
+renderList();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -1224,7 +1232,9 @@ function deleteRec(id){
   // called after confirmation
   DB=DB.filter(d=>d.id!==id);
   DB.forEach(d=>{d.linkedIds=(d.linkedIds||[]).filter(v=>v!==id);});
-  save();CID=null;renderList();
+  save();CID=null;window.onerror=function(msg,src,line,col,err){console.error('GLOBAL ERROR:',msg,'line:',line,'col:',col,err?.stack);return false;};
+window.addEventListener('unhandledrejection',e=>console.error('UNHANDLED PROMISE:',e.reason));
+renderList();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
   (r.takes||[]).forEach((t,i)=>{
@@ -1258,7 +1268,6 @@ function renderDetail(){
   console.log('renderDetail: CID=',CID);
   const r=DB.find(d=>d.id===CID);if(!r){console.error('renderDetail: no record for CID=',CID);return;}
   const el=document.getElementById('detail-content');if(!el){console.error('detail-content missing');return;}
-  try{
   const srcLabel=r.source==='video'?'Video':r.source==='app'?'Record':'Dictaphone';
   const srcColor=r.source==='app'?'var(--green)':r.source==='video'?'var(--blue)':'var(--accent)';
   const tonOpts=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"].map(n=>`<option value="${n}" ${r.tonalite===n?'selected':''}>${n}</option>`).join('');
@@ -3553,6 +3562,8 @@ function doUnlockAudio(){
 // ══════════════════════════════════════
 // INIT
 // ══════════════════════════════════════
+window.onerror=function(msg,src,line,col,err){console.error('GLOBAL ERROR:',msg,'line:',line,'col:',col,err?.stack);return false;};
+window.addEventListener('unhandledrejection',e=>console.error('UNHANDLED PROMISE:',e.reason));
 renderList();
 // Restore blob URLs from IndexedDB for takes in current DB
 DB.forEach(r=>{
