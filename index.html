@@ -1255,8 +1255,9 @@ function unlinkRec(lid){
 }
 
 function renderDetail(){
-  const r=DB.find(d=>d.id===CID);if(!r)return;
-  const el=document.getElementById('detail-content');if(!el)return;
+  console.log('renderDetail: CID=',CID);
+  const r=DB.find(d=>d.id===CID);if(!r){console.error('renderDetail: no record for CID=',CID);return;}
+  const el=document.getElementById('detail-content');if(!el){console.error('detail-content missing');return;}
   const srcLabel=r.source==='video'?'Video':r.source==='app'?'Record':'Dictaphone';
   const srcColor=r.source==='app'?'var(--green)':r.source==='video'?'var(--blue)':'var(--accent)';
   const tonOpts=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"].map(n=>`<option value="${n}" ${r.tonalite===n?'selected':''}>${n}</option>`).join('');
@@ -1560,8 +1561,10 @@ function stopRec(){
 const _takeBufs={};
 
 function finishRec(){
+  console.log('finishRec: CID=',CID,'recChunks=',recChunks.length,'DB=',DB.length);
   const blob=new Blob(recChunks,{type:'audio/webm'});
-  const r=DB.find(d=>d.id===CID);if(!r)return;
+  const r=DB.find(d=>d.id===CID);
+  if(!r){console.error('finishRec: no record found for CID=',CID);return;}
   const waveSnap=_waveAcc.length>2?getWaveSnap():(_recBars.length>2?[..._recBars].slice(-80):Array(60).fill(0.05));
   const takeIdx=(r.takes||[]).length;
   r.takes=r.takes||[];
